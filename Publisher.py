@@ -8,7 +8,7 @@ global publicKey
 global privateKey
 
 #Publisher id for differentiating publishers between one another. We can change these values
-#at run time.
+#at run time to something different.
 id = "p1"
 
 #This is the ip and port # of the publisher, this is set statically.
@@ -76,7 +76,7 @@ def send_message(message):
 #Acknowledges a message has been received by broker if verbose output is enabled, 
 #Message includes publisher id, the topic, as well as the message itself.
 #NOTE: This code will be a problem if we encrypt it as the broker may not know which proxy node
-#to send to.
+#to send to unless we distinguish which proxy node by topic, port number, ip address, or so on.
 def publish(topic, message):
   log(f"Publishing to {topic}: {message}")
   response = send_message(id + " pub " + topic + " " + message)

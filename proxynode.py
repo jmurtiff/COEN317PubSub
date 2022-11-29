@@ -7,7 +7,8 @@ import logging
 #This is the ip address of the broker that is sending messages to the proxy node, this is set statically.
 broker_host_ip = "127.0.0.1"
 
-#Port that listens for messages from publishers (broker --> proxy node)
+#Port that listens for messages from publishers (broker --> proxy node). This has to be different since the broker
+#will be sending to different proxy nodes at one time, but the ip address can be the same. 
 broker_port = None
 
 #Verbose output for more details printed to log.
@@ -26,6 +27,8 @@ def decrypt(ciphertext, key):
     except:
         return False
 
+#We need to store public keys for each connected subscriber in a file
+
 #ADDED Code
 # Added code that can verify message signatures according with SHA-1 signature
 def verify(message, signature, key):
@@ -38,7 +41,7 @@ def verify(message, signature, key):
 #time. Sets up a socket with a single port that all brokers are sending messages 
 #through, goes through each socket connection, takes all data, and then sends it 
 #to the handle_broker_message() function.
-def listenpubthread():
+def listen_broker_thread():
   log(f"Broker thread is up at port {broker_port}")
 
   while True:
@@ -63,10 +66,9 @@ def listenpubthread():
         conn.sendall(b"OK")
       handle_broker_message(data)
 
-
-def handle_broker_message(data):
 #First we have to decrypt the message before we can take it apart, also we somehow need the broker's information
-#about the subscriber
+#about the subscriber 
+def handle_broker_message(data):
   data = data.decode().split()
   data = [data[0], data[1], data[2], ' '.join(data[3:])]
   pub_id = data[0]
@@ -79,3 +81,8 @@ def handle_broker_message(data):
       if verbose: log(f"Sending message \"{message}\" to {sub['id']} @ {sub['ip']}:{sub['port']}")
       send_message(message, sub['ip'], sub['port'])
   log(f"{pub_id} published to {topic} ({sub_count} subs): {message}")
+
+
+#This function will listen for the public keys that are sent by each publisher  
+def listen_publisher_thread():
+    
