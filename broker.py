@@ -2,6 +2,7 @@ import socket
 import threading
 from time import sleep
 from sys import exit, argv
+import json
 
 #IP address of broker.
 host = "127.0.0.1"
@@ -142,7 +143,7 @@ def handle_sub_message(data, addr):
   if verbose: log("Current subs: " + str(subscriptions))
 
 
-#This function is for communication between 
+#This function is for communication between broker and subscriber
 def subthread():
   log(f"Subscriber thread is up at port {sub_port}")
 
@@ -167,6 +168,31 @@ def subthread():
         # Send OK response
         conn.sendall(b"OK")
       handle_sub_message(data, addr)
+
+#ADDED FUNCTION TO DEAL WITH COMMUNICATIONS BETWEEN THE PROXIES AND BROKER
+def handle_proxy_message(data):
+  # Parse data from proxy's JSON file
+  ip = #get ip from proxy's file
+  port = #get port proxy's file
+  proxy_id = #get proxy_id from proxy's file
+  key = #get key from proxy's file
+  
+  # Check if any proxies in list are already designated as leader, and set leader flag
+  leaderFlag = open("proxy.json", "r").read().find('"is-leader": True')
+
+  proxyEntry = {
+    "ip": ip,
+    "port": port,
+    "id": proxy_id,
+    "public-key": key,
+    "is-leader": leaderFlag,
+    "is-live": True
+  }
+
+  json_str = json.dumps(proxyEntry)
+  with open("proxy.json", "a") as outfile:
+    outfile.write(json_str)
+    outfile.write("\n")
 
 #This function is used if we run python broker.py -s sub_port -p pub_port [-o port_offset -v]
 #and we enter in a different subscriber port value for the broker via the command line.
