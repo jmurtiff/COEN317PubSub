@@ -60,7 +60,7 @@ def send_message(message):
     message = bytes(message, 'UTF-8')
 
     # Need to encrypt message using RSA before sending it, but we don't want to encrypt sending the public
-    # key to the broker.
+    # key to the proxy node first.
 
     s.sendall(message + EOT_CHAR)
 
