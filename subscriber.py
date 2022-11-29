@@ -15,17 +15,11 @@ verbose = False
 EOT_CHAR = b"\4"
 BUFFER_SIZE = 1024
 
-#Counter for subscriber to update Lamport timestamp
-timestamp = 0
-
 
 def log(message):
   print(f"[Sub {id}] " + message);
 
 def send_message(message):
-  global timestamp
-  timestamp = timestamp + 1 # Increment for message send
-
   with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     # Setup socket and connect
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -40,8 +34,6 @@ def send_message(message):
         sleep(30)
 
     # Send message
-    LamportTS = str(timestamp) + ' ' # Add timestamp to beginning of message
-    message = LamportTS + message
     message = bytes(message, 'UTF-8')
     s.sendall(message + EOT_CHAR)
 
@@ -169,8 +161,6 @@ def sender():
   handle_cli_commands()
 
 def receiver():
-  global timestamp
-
   while True:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
       # Setup socket and listen for connections
@@ -190,12 +180,6 @@ def receiver():
             break
         # Send OK response
         # conn.sendall(b"OK")
-      dataSplit = data.decode().split()
-      lamportTS = dataSplit[0]
-
-      timestamp = max(timestamp, int(lamportTS)) # Take maximum timestamp of broker vs. subscriber
-      timestamp = timestamp + 1 # Increment for message receive
-
       log(f"Received message: {data.decode()}")
 
 ret_val = handle_command_line_args()
