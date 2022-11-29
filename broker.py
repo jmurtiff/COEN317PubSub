@@ -57,7 +57,7 @@ def handle_pub_message(data):
     if sub['topic'] == topic:
       sub_count += 1
       if verbose: log(f"Sending message \"{message}\" with timestamp {timestamp} to {sub['id']} @ {sub['ip']}:{sub['port']}")
-      send_message(message, timestamp, sub['ip'], sub['port'])
+      send_message(message, sub['ip'], sub['port'])
   log(f"{pub_id} published to {topic} ({sub_count} subs): {message}")
 
 #Function to set up socket between broker and subscriber, and then send
