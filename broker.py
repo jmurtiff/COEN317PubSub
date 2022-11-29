@@ -178,7 +178,7 @@ def handle_proxy_message(data):
   key = #get key from proxy's file
   
   # Check if any proxies in list are already designated as leader, and set leader flag
-  leaderFlag = open("proxy.json", "r").read().find('"is-leader": True')
+  leaderFlag = not open("proxy.json", "r").read().find('"is-leader": True')
 
   proxyEntry = {
     "ip": ip,
