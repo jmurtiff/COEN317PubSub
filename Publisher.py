@@ -8,15 +8,16 @@ global publicKey
 global privateKey
 
 #Publisher id for differentiating publishers between one another. We can change these values
-#at run time to something different if we want.
+#at run time to something different if we want to.
 id = "p1"
 
-#This is the ip and port # of the publisher, this is set statically.
+#This is the ip and port # of the publisher itself, this is set statically. And is only used 
+#if the publisher wants to listen for messages from itself??? Not sure exactly why its here.
 client_ip = "127.0.0.1"
 client_port = 8001
 
 #This is the ip and port # of the broker that the publisher is sending to, we can change 
-#this value to whatever we want.
+#this value to whatever we want it to be.
 server_ip = None
 server_port = None
 
@@ -29,7 +30,7 @@ EOT_CHAR = b"\4"
 BUFFER_SIZE = 1024
 
 #ADDED CODE
-#This function is necessary to generate public and private keys for RSA encryption
+#This function is necessary to generate public and private keys for RSA encryption.
 def generateKeys():
   (publicKey, privateKey) = rsa.newkeys(1024)
   return privateKey, publicKey
@@ -58,13 +59,13 @@ def send_message(message):
     #when the code is executed multiple times.
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-    #Listen to the broker for any messages.
+    #Listen to the publisher itself --> Not entirely sure why this is needed. 
     s.bind((client_ip, client_port))
 
-    #Send messages to the broker.
+    #Connect to the broker's IP address and port to send messages to the broker.
     s.connect((server_ip, server_port))
 
-    # Send message
+    # Send message to the broker.
     message = bytes(message, 'UTF-8')
 
     #NOTE:Need to encrypt message using RSA before sending it, but we don't want to encrypt sending the public
@@ -82,8 +83,9 @@ def send_message(message):
 #Publish function logs and then calls send_message to send message to a broker.
 #Acknowledges a message has been received by broker if verbose output is enabled, 
 #Message includes publisher id, the topic, as well as the message itself.
-#NOTE: This code will be a problem if we encrypt it as the broker may not know which proxy node
-#to send to unless we distinguish which proxy node by topic, port number, ip address, or so on.
+
+#NOTE: This code will be a problem if we encrypt it as the message as the return value will
+#not be able to deceiver the different parts of the message. We need to change this function.
 def publish(topic, message):
   log(f"Publishing to {topic}: {message}")
   response = send_message(id + " pub " + topic + " " + message)
