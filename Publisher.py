@@ -8,7 +8,7 @@ global publicKey
 global privateKey
 
 #Publisher id for differentiating publishers between one another. We can change these values
-#at run time to something different.
+#at run time to something different if we want.
 id = "p1"
 
 #This is the ip and port # of the publisher, this is set statically.
@@ -57,7 +57,11 @@ def send_message(message):
     #Next line is used to avoid "Address already in use error" presumably between
     #when the code is executed multiple times.
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    #Listen to the broker for any messages.
     s.bind((client_ip, client_port))
+
+    #Send messages to the broker.
     s.connect((server_ip, server_port))
 
     # Send message
@@ -66,6 +70,9 @@ def send_message(message):
     #NOTE:Need to encrypt message using RSA before sending it, but we don't want to encrypt sending the public
     # key to the proxy node first. So we need a variable here that has a socket connection with a proxy node first
     #to send the key to an established proxy node before sending it to the broker that sends it to the same proxy node.
+    
+    #NOTE: We can create a new function to handle this first before we call send_message(message), but then afterwards we 
+    #have to handle telling the broker to what proxy node to send the information to. 
 
     s.sendall(message + EOT_CHAR)
 

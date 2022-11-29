@@ -83,6 +83,6 @@ def handle_broker_message(data):
   log(f"{pub_id} published to {topic} ({sub_count} subs): {message}")
 
 
-#This function will listen for the public keys that are sent by each publisher  
+#This function will listen for the public keys that are sent by each publisher, but first we need to know 
+#what port and IP addresses are associated with the subscriber's first so we can listen for them.
 def listen_publisher_thread():
-    
