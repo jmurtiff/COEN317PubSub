@@ -42,11 +42,6 @@ def log(message):
 #to know the topic and other elements, so in this case we may have to find a way to allow the topic
 #of a message to be transmitted separately so we can send to the correct proxy node.
 def handle_pub_message(data):
-  #Lamport timestamps are used between broker and subscriber - treat receival from publisher as
-  #an internal event and increment as normal
-  global timestamp
-  timestamp = timestamp + 1
-
   data = data.decode().split()
   data = [data[0], data[1], data[2], ' '.join(data[3:])]
   pub_id = data[0]
@@ -56,7 +51,7 @@ def handle_pub_message(data):
   for sub in subscriptions:
     if sub['topic'] == topic:
       sub_count += 1
-      if verbose: log(f"Sending message \"{message}\" with timestamp {timestamp} to {sub['id']} @ {sub['ip']}:{sub['port']}")
+      if verbose: log(f"Sending message \"{message}\" to {sub['id']} @ {sub['ip']}:{sub['port']}")
       send_message(message, sub['ip'], sub['port'])
   log(f"{pub_id} published to {topic} ({sub_count} subs): {message}")
 
@@ -65,9 +60,6 @@ def handle_pub_message(data):
 #we want to use TCP or not for this communication. 
 #UDP is socket.SOCK_DGRAM instead of socket.SOCK_STREAM
 def send_message(message, ip, port):
-  global timestamp
-  timestamp = timestamp + 1 # Increment for message send
-
   with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     # Setup socket and connect
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -86,8 +78,6 @@ def send_message(message, ip, port):
         sleep(30)
 
     # Send message
-    LamportTS = str(timestamp) + ' ' # Add timestamp to beginning of message
-    message = LamportTS + message
     message = bytes(message, 'UTF-8')
     s.sendall(message + EOT_CHAR)
 
@@ -127,37 +117,22 @@ def pubthread():
 #Maybe we can have this list as part of each proxy node to keep track of relevant information for
 #their subscribers. 
 def subscribe(id, topic, ip, port):
-  #Increment Lamport timestamp
-  global timestamp
-  timestamp = timestamp + 1
-
   sub_obj = { "id": id, "topic": topic, "ip": ip, "port": port }
   if sub_obj not in subscriptions:
     subscriptions.append(sub_obj)
 
 #Remove subscriber based on ID or topic name.
 def unsubscribe(id, topic):
-  #Increment Lamport timestamp
-  global timestamp
-  timestamp = timestamp + 1
-
   global subscriptions
   subscriptions = [s for s in subscriptions if s["id"] != id or s["topic"] != topic]
 
 #This function is used for the subscriber to tell the broker that it wants to subscribe or unsubscribe 
 #from a given topic.
 def handle_sub_message(data, addr):
-  global timestamp
-
   data = data.decode().split()
-
-  lamportTS = data[0]
-  timestamp = max(timestamp, int(lamportTS)) # Take maximum timestamp of broker vs. subscriber
-  timestamp = timestamp + 1 # Increment for message receive
-
-  sub_id = data[1]
-  action = data[2]
-  topic = data[3]
+  sub_id = data[0]
+  action = data[1]
+  topic = data[2]
   logging_output = "subscribed to" if action == "sub" else "unsubscribed from"
   log(f"{sub_id} {logging_output} {topic}")
   if action == "sub":
