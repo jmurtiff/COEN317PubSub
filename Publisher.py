@@ -34,11 +34,13 @@ def generateKeys():
   (publicKey, privateKey) = rsa.newkeys(1024)
   return privateKey, publicKey
 
+#ADDED CODE
 #This function takes in a message and either the public or private key and encrypts the message
 #using the private or public key.
 def encrypt(message, key):
   return rsa.encrypt(message.encode('ascii'), key)
 
+#ADDED CODE
 #This function takes in a message and a key and signs the message using SHA-1.
 def sign(message, key):
   return rsa.sign(message.encode('ascii'), key, 'SHA-1')

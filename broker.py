@@ -14,7 +14,7 @@ pub_port = None
 #a given topic.
 sub_port = None
 
-#Offset for port sends messages to subscribers
+#Offset for port sends messages to subscribers --> we need to change this to proxy node.
 port_offset = 1
 
 #Verbose output for more details printed to log.
