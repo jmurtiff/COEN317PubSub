@@ -59,7 +59,7 @@ def unsubscribe(topic):
   if verbose: log(f"Received {response}")
 
 def check_command(command):
-  return not command[0].isdigit() or int(command[0]) < 0 or len(command) != 3 or (command[2] != "sub" and command[2] != "unsub")
+  return not command[0].isdigit() or int(command[0]) < 0 or len(command) != 4 or (command[2] != "sub" and command[2] != "unsub")
 
 def handle_command(command):
   topic = command[2]
