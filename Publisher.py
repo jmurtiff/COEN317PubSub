@@ -7,14 +7,16 @@ import logging
 global publicKey
 global privateKey
 
-#Publisher id for differentiating publishers between one another.
+#Publisher id for differentiating publishers between one another. We can change these values
+#at run time.
 id = "p1"
 
-#This is the ip and port # of the publisher.
+#This is the ip and port # of the publisher, this is set statically.
 client_ip = "127.0.0.1"
 client_port = 8001
 
-#This is the ip and port # of the broker that the publisher is sending to.
+#This is the ip and port # of the broker that the publisher is sending to, we can change 
+#this value to whatever we want.
 server_ip = None
 server_port = None
 
@@ -33,11 +35,11 @@ def generateKeys():
   return privateKey, publicKey
 
 #This function takes in a message and either the public or private key and encrypts the message
-#using the private or public key
+#using the private or public key.
 def encrypt(message, key):
   return rsa.encrypt(message.encode('ascii'), key)
 
-
+#This function takes in a message and a key and signs the message using SHA-1.
 def sign(message, key):
   return rsa.sign(message.encode('ascii'), key, 'SHA-1')
 
@@ -59,17 +61,20 @@ def send_message(message):
     # Send message
     message = bytes(message, 'UTF-8')
 
-    # Need to encrypt message using RSA before sending it, but we don't want to encrypt sending the public
-    # key to the proxy node first.
+    #NOTE:Need to encrypt message using RSA before sending it, but we don't want to encrypt sending the public
+    # key to the proxy node first. So we need a variable here that has a socket connection with a proxy node first
+    #to send the key to an established proxy node before sending it to the broker that sends it to the same proxy node.
 
     s.sendall(message + EOT_CHAR)
 
     # Wait for OK response
     return s.recv(BUFFER_SIZE)
 
-#Publish function logs and then calls send_message to send message to broker.
+#Publish function logs and then calls send_message to send message to a broker.
 #Acknowledges a message has been received by broker if verbose output is enabled, 
 #Message includes publisher id, the topic, as well as the message itself.
+#NOTE: This code will be a problem if we encrypt it as the broker may not know which proxy node
+#to send to.
 def publish(topic, message):
   log(f"Publishing to {topic}: {message}")
   response = send_message(id + " pub " + topic + " " + message)
@@ -79,7 +84,7 @@ def publish(topic, message):
 def check_command(command):
   return not command[0].isdigit() or int(command[0]) < 0 or len(command) < 4 or command[1] != "pub"
 
-#Calls publish function based on series of commands, command[0] is wait time, command[1] is refering to publisher,
+#Calls publish function based on series of commands, command[0] is wait time, command[1] is referring to publisher,
 #command[2] is topic for publishing, and command[3] is message that will be published
 def handle_command(command):
   command = [command[0], command[1], command[2], ' '.join(command[3:])]
@@ -91,7 +96,7 @@ def handle_command(command):
   publish(topic, message)
 
 #Instead of handling one command at a time, take in commands from a file 
-#and execute them in order.
+#and execute them in order. Useful for testing purposes.
 def handle_command_file():
   file = open(command_file, "r").readlines()
   for command in file:
@@ -202,8 +207,14 @@ def handle_command_line_args():
 ret_val = handle_command_line_args()
 if ret_val != -1:
   log("Publisher process started")
+
+  #We need to generate public and private RSA keys, and send to the associated proxy node before we start sending to
+  #the broker node.
+  #NOTE: This code is not yet complete.
   generateKeys()
   send_message(publicKey)
+
+
   handle_command_file()
   handle_cli_commands()
 else:
