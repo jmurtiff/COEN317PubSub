@@ -21,11 +21,18 @@ client_port = 8001
 server_ip = None
 server_port = None
 
+#ADDED CODE
+#The proxy node that the publisher sends its public key to has to be known ahead of time, because
+#how else can this be done? We should probably add the proxy node's ip and port # as CLI arguments
+#Unless we somehow can assign proxy nodes based on topics somehow???
+proxy_ip = None
+proxy_port = None
+
 #Verbose output for more details printed to log.
 verbose = False
 
 #Define end of message character and buffer size to hold messages (used for 
-# checking if message went through correctly).
+#checking if message went through correctly).
 EOT_CHAR = b"\4"
 BUFFER_SIZE = 1024
 
@@ -80,10 +87,30 @@ def send_message(message):
     # Wait for OK response
     return s.recv(BUFFER_SIZE)
 
+
+
+#ADDED CODE
+def send_proxynode_message():
+  with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    # Setup socket and connect
+
+    #Next line is used to avoid "Address already in use error" presumably between
+    #when the code is executed multiple times.
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    #Connect to proxy node ip address and port number 
+    s.connect((proxy_ip, proxy_port))
+
+    # Send public key to the proxy node for later decryption of messages. 
+    message = publicKey
+    message = bytes(message, 'UTF-8')
+    s.sendall(message + EOT_CHAR)
+
+
+
 #Publish function logs and then calls send_message to send message to a broker.
 #Acknowledges a message has been received by broker if verbose output is enabled, 
 #Message includes publisher id, the topic, as well as the message itself.
-
 #NOTE: This code will be a problem if we encrypt it as the message as the return value will
 #not be able to deceiver the different parts of the message. We need to change this function.
 def publish(topic, message):
@@ -223,7 +250,7 @@ if ret_val != -1:
   #the broker node.
   #NOTE: This code is not yet complete.
   generateKeys()
-  send_message(publicKey)
+  send_proxynode_message()
 
 
   handle_command_file()
