@@ -8,19 +8,27 @@ import json
 global proxy_publicKey
 global proxy_privateKey
 
-#Proxy node id for differentiating proxy nodes from one another.
+#Proxy node id for differentiating proxy nodes from one another. We change change this in CLI.
 id = "proxy1"
 
 #This is the ip address of the broker that is sending messages to the proxy node, this is set statically.
-broker_host_ip = "127.0.0.1"
+broker_ip = "127.0.0.1"
 
-#Port that listens for messages from brokers (broker --> proxy node). This has to be different since the broker
-#will be sending to different proxy nodes at one time, but the ip address can be the same. 
-broker_port = None
+#Port that listens for messages from brokers (broker --> proxy node). Broker should be sending to lead proxy
+#node and then lead proxy node sends to other proxy nodes.
+broker_receiving_port = None
 
+#Port that sends messages to brokers (proxy node --> broker). We use this to send JSON information to the 
+#broker.
+broker_sending_port = None
 
-proxy_node_ip = None
-proxy_node_port = None
+#Proxy node needs to know to which subscriber (ip + port) to send its messages to.
+proxy_node_sending_ip = None
+proxy_node_sending_port = None
+
+#Proxy node needs to know to which (ip + port) to receive messages from the lead proxy node.
+proxy_node_receiving_ip = None
+proxy_node_sending_port = None
 
 #Verbose output for more details printed to log.
 verbose = False
@@ -35,7 +43,7 @@ BUFFER_SIZE = 1024
 #We need to append to the file for each proxy node that exists with all the relevant information.
 #We also need to take into account the fact that multiple proxy nodes may append to this file at 
 #the same time, which could be an issue.
-def generate_JSON_File():
+def generate_JSON_Dictionary():
   
   #Generate one pair of private and public keys (let's make this the proxy's node's keys)
   (proxy_publicKey, proxy_privateKey) = rsa.newkeys(1024)
@@ -47,9 +55,11 @@ def generate_JSON_File():
   #that would make it easier for encryption and signature verification since we don't know what proxy 
   #node is going to receive what message from what publisher.
 
-
+  #NOTE: The below code will now be in the broker.
   with open(proxy.json, "r") as file:
     data = json.load(file)
+  #NOTE: This code will now be in the broker.
+
   dictionary = {
     "IP": proxy_node_ip,
     "port": proxy_node_port,
@@ -58,10 +68,33 @@ def generate_JSON_File():
     "is-leader": False,
     "is-live": True
 }
-  data.append(dictionary)
 
+  data = json.dumps(dictionary)
+
+  with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    # Setup socket and connect
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    #Connect to the broker's IP address and port to send JSON to the broker.
+    s.connect((broker_ip, broker_sending_port))
+
+    # Send message to the broker.
+    message = bytes(data,'UTF-8')
+    s.sendall(message + EOT_CHAR)
+
+    # Wait for OK response
+    return s.recv(BUFFER_SIZE)
+
+  #NOTE: The below code will now be in the broker.
+  data.append(dictionary)
+  #NOTE: This code will now be in the broker.
+
+  #NOTE: The below code will now be in the broker.
   with open(proxy.json, "w") as file:
     json.dump(data, file)
+  #NOTE: This code will now be in the broker.
+  
+
 
 #ADDED Code
 #Added code that can decrypt messages using an associated private or public key (in this case public key).
@@ -81,7 +114,7 @@ def verify(message, signature, key):
 
 #Need to add a function to receive messages from broker (and then save to send to leader proxy node).
 
-#Need to add a function to send messages to subscribers.
+#Need to add a function to decrypt + verify messages + send messages to subscribers.
 
 #Need to add function to handle leader election for proxy nodes.
 
