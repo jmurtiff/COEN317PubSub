@@ -133,8 +133,6 @@ def handle_cli_commands():
   except:
     return
 
-    return
-
 #This is good, doesn't have to change.
 #This function is used if we run "python publisher.py -i ID -r pub_port -h broker_IP -p port [-f command_file -v]""
 #and we enter in a different ID value for the publisher via the command line.

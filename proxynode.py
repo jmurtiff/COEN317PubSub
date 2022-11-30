@@ -29,10 +29,15 @@ verbose = False
 EOT_CHAR = b"\4"
 BUFFER_SIZE = 1024
 
+#ADDED Code
 #This function generates a new entry for the JSON file that we eventually have to send to publishers.
-#We create 
+#We need to append to the file for each proxy node that exists with all the relevant information.
+#We also need to take into account the fact that multiple proxy nodes may append to this file at 
+#the same time, which could be an issue.
 def generate_JSON_File():
   (publicKey, privateKey) = rsa.newkeys(1024)
+  with open(proxy.json, "r") as file:
+    data = json.load(file)
   dictionary = {
     "IP": proxy_node_ip,
     "port": proxy_node_port,
@@ -41,8 +46,10 @@ def generate_JSON_File():
     "is-leader": False,
     "is-live": True
 }
+  data.append(dictionary)
 
-  return privateKey, publicKey
+  with open(proxy.json, "w") as file:
+    json.dump(data, file)
 
 #ADDED Code
 #Added code that can decrypt messages using an associated private or public key (in this case public key).
@@ -60,60 +67,11 @@ def verify(message, signature, key):
     except:
         return False
 
+#Need to add a function to receive messages from broker (and then save to send to leader proxy node).
 
+#Need to add a function to send messages to subscribers.
 
+#Need to add function to handle leader election for proxy nodes.
 
-
-
-
-
-
-#Thread function for a proxy node to handle multiple broker messages at the same
-#time. Sets up a socket with a single port that all brokers are sending messages 
-#through, goes through each socket connection, takes all data, and then sends it 
-#to the handle_broker_message() function.
-def listen_broker_thread():
-  log(f"Broker thread is up at port {broker_port}")
-
-  while True:
-    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-      # Setup socket and listen for connections
-      s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-      s.bind((broker_host_ip, broker_port))
-      s.listen()
-
-      # Accept connections
-      conn, addr = s.accept()
-      data = b""
-      with conn:
-        if verbose: log(f"Publisher connected from {addr[0]}:{addr[1]}")
-        # Loop through connections until we get the EOT_CHAR (end-of-transmission)
-        while True:
-          data += conn.recv(BUFFER_SIZE)
-          if data[-1] == EOT_CHAR[0]:
-            data = data[:-1]
-            break
-        # Send OK response
-        conn.sendall(b"OK")
-      handle_broker_message(data)
-
-#First we have to decrypt the message before we can take it apart, also we somehow need the broker's information
-#about the subscriber 
-def handle_broker_message(data):
-  data = data.decode().split()
-  data = [data[0], data[1], data[2], ' '.join(data[3:])]
-  pub_id = data[0]
-  topic = data[2]
-  message = data[3]
-  sub_count = 0
-  for sub in subscriptions:
-    if sub['topic'] == topic:
-      sub_count += 1
-      if verbose: log(f"Sending message \"{message}\" to {sub['id']} @ {sub['ip']}:{sub['port']}")
-      send_message(message, sub['ip'], sub['port'])
-  log(f"{pub_id} published to {topic} ({sub_count} subs): {message}")
-
-
-#This function will listen for the public keys that are sent by each publisher, but first we need to know 
-#what port and IP addresses are associated with the subscriber's first so we can listen for them.
-def listen_publisher_thread():
+#Need to write code to handle command line arguments (similar to other two files) to specific proxy node ip address 
+#and port number.
