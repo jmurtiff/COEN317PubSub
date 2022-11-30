@@ -3,12 +3,16 @@ import threading
 from time import sleep
 from sys import exit, argv
 import json
+from os.path import exists
 
 #IP address of broker.
 host = "127.0.0.1"
 
 #Port that listens for messages from publishers (publisher --> broker)
 pub_port = None
+
+#Port that listens for messages from proxy nodes (proxy node --> broker)
+proxy_port = None
 
 #Port that listens for messages from subscribers (subscriber --> broker)
 #We need this two-way communication if we want the subscribers to easily subscribe or unsubscribe from 
@@ -90,7 +94,7 @@ def send_message(message, ip, port):
 #through, goes through each socket connection, takes all data, and then sends it 
 #to the handle_pub_message() function.
 def pubthread():
-  log(f"Publisher thread is up at port {pub_port}")
+  log(f"Proxy thread is up at port {pub_port}")
 
   while True:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -112,6 +116,10 @@ def pubthread():
             break
         # Send OK response
         conn.sendall(b"OK")
+
+      ######## LOGIC TO DETECT getProxyNodes header ########
+
+      ######################################################
       handle_pub_message(data)
 
 #Add to the subscriptions array with each subscriber based on their id, topic, ip, and port
@@ -169,31 +177,35 @@ def subthread():
         conn.sendall(b"OK")
       handle_sub_message(data, addr)
 
-#ADDED FUNCTION TO DEAL WITH COMMUNICATIONS BETWEEN THE PROXIES AND BROKER
-def handle_proxy_message(data):
-  # Parse data from proxy's JSON file
-  ip = #get ip from proxy's file
-  port = #get port proxy's file
-  proxy_id = #get proxy_id from proxy's file
-  key = #get key from proxy's file
-  
-  # Check if any proxies in list are already designated as leader, and set leader flag
-  leaderFlag = not open("proxy.json", "r").read().find('"is-leader": True')
+#Handles incoming proxy node messages that are sending JSON information
+def proxythread():
+  with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    # Setup socket and listen for connections
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.bind((host, proxy_port))
+    s.listen()
 
-  proxyEntry = {
-    "ip": ip,
-    "port": port,
-    "id": proxy_id,
-    "public-key": key,
-    "is-leader": leaderFlag,
-    "is-live": True
-  }
-
-  json_str = json.dumps(proxyEntry)
-  with open("proxy.json", "a") as outfile:
-    outfile.write(json_str)
-    outfile.write("\n")
-
+    # Accept connections
+    conn, addr = s.accept()
+    data = b""
+    with conn:
+      if verbose: log(f"Proxy node connected from {addr[0]}:{addr[1]}")
+      # Loop through connections until we get the EOT_CHAR (end-of-transmission)
+      while True:
+        data += conn.recv(BUFFER_SIZE)
+        if data[-1] == EOT_CHAR[0]:
+          data = data[:-1]
+          break
+      
+      # write/append rows of JSON to the broker's replica of proxy.json
+      if exists("proxy.json"):
+        with open("proxy.json", "a") as file:
+          file.write("\n")
+          json.dump(json.loads(data.decode("UTF_8")), file)s
+      else:
+        with open("proxy.json", "w") as file:
+          json.dump(json.loads(data.decode("UTF-8")), file)
+     
 #This function is used if we run python broker.py -s sub_port -p pub_port [-o port_offset -v]
 #and we enter in a different subscriber port value for the broker via the command line.
 def handle_option_sub_port(arguments, i):
@@ -228,10 +240,20 @@ def handle_option_verbose(arguments, i):
   verbose = True
   return 1
 
+def handle_option_proxy_port(arguments, i):
+  global proxy_port
+  try:
+    proxy_port = int(arguments[i+1])
+  except:
+    print("Invalid proxy port number")
+    return -1
+  return 1
+
 def handle_command_line_args():
   options = {
     "-s": handle_option_sub_port,
     "-p": handle_option_pub_port,
+    "-pr": handle_option_proxy_port,
     "-o": handle_option_port_offset,
     "-v": handle_option_verbose,
   }
@@ -263,7 +285,8 @@ if ret_val != -1:
   try:
     threading.Thread(target=pubthread).start()
     threading.Thread(target=subthread).start()
+    threading.Thread(target=proxythread).start()
   except KeyboardInterrupt:
     exit(0)
 else:
-  print("Use: python broker.py -s sub_port -p pub_port [-o port_offset -v]")
+  print("Use: python broker.py -s sub_port -p pub_port -pr proxy_port [-o port_offset -v]")
