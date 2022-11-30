@@ -7,28 +7,27 @@ import logging
 global publicKey
 global privateKey
 
+#This is good, doesn't have to change.
 #Publisher id for differentiating publishers between one another. We can change these values
 #at run time to something different if we want to.
 id = "p1"
 
-#This is the ip and port # of the publisher itself, this is set statically. And is only used 
-#if the publisher wants to listen for messages from itself??? Not sure exactly why its here.
-client_ip = "127.0.0.1"
-client_port = 8001
-
+#This is good, doesn't have to change.
 #This is the ip and port # of the broker that the publisher is sending to, we can change 
 #this value to whatever we want it to be.
-server_ip = None
-server_port = None
+broker_ip = None
+broker_port = None
 
 #ADDED CODE
-#The proxy node that the publisher sends its public key to has to be known ahead of time, because
-#how else can this be done? We should probably add the proxy node's ip and port # as CLI arguments
-#Unless we somehow can assign proxy nodes based on topics somehow???
+#This is good, doesn't have to change.
+#The proxy node IP address and port, we get this from the JSON file that the proxy nodes
+#have created and was sent to us by the broker.
 proxy_ip = None
 proxy_port = None
 
-#Verbose output for more details printed to log.
+#This is good, doesn't have to change.
+#Verbose output for more details printed to log. 
+#NOTE: How do we do logging functions in Python? It keeps giving me errors whenever I try to run the log function.
 verbose = False
 
 #Define end of message character and buffer size to hold messages (used for 
@@ -37,18 +36,14 @@ EOT_CHAR = b"\4"
 BUFFER_SIZE = 1024
 
 #ADDED CODE
-#This function is necessary to generate public and private keys for RSA encryption.
-def generateKeys():
-  (publicKey, privateKey) = rsa.newkeys(1024)
-  return privateKey, publicKey
-
-#ADDED CODE
+#This is good, doesn't have to change.
 #This function takes in a message and either the public or private key and encrypts the message
 #using the private or public key.
 def encrypt(message, key):
   return rsa.encrypt(message.encode('ascii'), key)
 
 #ADDED CODE
+#This is good, doesn't have to change.
 #This function takes in a message and a key and signs the message using SHA-1.
 def sign(message, key):
   return rsa.sign(message.encode('ascii'), key, 'SHA-1')
@@ -66,11 +61,8 @@ def send_message(message):
     #when the code is executed multiple times.
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-    #Listen to the publisher itself --> Not entirely sure why this is needed. 
-    s.bind((client_ip, client_port))
-
     #Connect to the broker's IP address and port to send messages to the broker.
-    s.connect((server_ip, server_port))
+    s.connect((broker_ip, broker_port))
 
     # Send message to the broker.
     message = bytes(message, 'UTF-8')
@@ -88,29 +80,10 @@ def send_message(message):
     return s.recv(BUFFER_SIZE)
 
 
-
-#ADDED CODE
-def send_proxynode_message():
-  with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    # Setup socket and connect
-
-    #Next line is used to avoid "Address already in use error" presumably between
-    #when the code is executed multiple times.
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-
-    #Connect to proxy node ip address and port number 
-    s.connect((proxy_ip, proxy_port))
-
-    # Send public key to the proxy node for later decryption of messages. 
-    message = publicKey
-    message = bytes(message, 'UTF-8')
-    s.sendall(message + EOT_CHAR)
-
-
-
 #Publish function logs and then calls send_message to send message to a broker.
 #Acknowledges a message has been received by broker if verbose output is enabled, 
 #Message includes publisher id, the topic, as well as the message itself.
+
 #NOTE: This code will be a problem if we encrypt it as the message as the return value will
 #not be able to deceiver the different parts of the message. We need to change this function.
 def publish(topic, message):
@@ -162,12 +135,14 @@ def handle_cli_commands():
 
     return
 
+#This is good, doesn't have to change.
 #This function is used if we run "python publisher.py -i ID -r pub_port -h broker_IP -p port [-f command_file -v]""
 #and we enter in a different ID value for the publisher via the command line.
 def handle_option_id(arguments, i):
   global id
   id = arguments[i+1]
 
+#This is good, doesn't have to change.
 #This function is used if we run "python publisher.py -i ID -r pub_port -h broker_IP -p port [-f command_file -v]""
 #and we enter in a different publisher client port value for the publisher via the command line.
 def handle_option_client_port(arguments, i):
@@ -178,27 +153,32 @@ def handle_option_client_port(arguments, i):
     print("Invalid port number")
     return -1
 
+#This is good, doesn't have to change.
 #This function is used if we run "python publisher.py -i ID -r pub_port -h broker_IP -p port [-f command_file -v]""
 #and we enter in a different broker IP address for the publisher via the command line.
-def handle_option_server_ip(arguments, i):
-  global server_ip
-  server_ip = arguments[i+1]
+def handle_option_broker_ip(arguments, i):
+  global broker_ip
+  broker_ip = arguments[i+1]
 
+#This is good, doesn't have to change.
 #This function is used if we run "python publisher.py -i ID -r pub_port -h broker_IP -p port [-f command_file -v]""
 #and we enter in a different broker port # for the publisher via the command line.
-def handle_option_server_port(arguments, i):
-  global server_port
+def handle_option_broker_port(arguments, i):
+  global broker_port
   try:
-    server_port = int(arguments[i+1])
+    broker_port = int(arguments[i+1])
   except: 
     print("Invalid port number")
     return -1
 
-
+#This is good, doesn't have to change.
+#This function is used if we run "python publisher.py -i ID -r pub_port -h broker_IP -p port [-f command_file -v]""
+#and we enter in a unique command file that is executed with several commands.
 def handle_option_command_file(arguments, i):
   global command_file
   command_file = arguments[i+1]
 
+#This is good, doesn't have to change.
 #This function is used if we run "python publisher.py -i ID -r pub_port -h broker_IP -p port [-f command_file -v]""
 #and we enter in the verbose option to include more runtime information.
 def handle_option_verbose(arguments, i):
@@ -209,12 +189,13 @@ def handle_option_verbose(arguments, i):
 
 def handle_command_line_args():
 
-  #Options here each call functions depending on the CLI entered by the user.
+  #Options here each call functions depending on the arguments that are entered 
+  #by the user.
   options = {
     "-i": handle_option_id,
     "-r": handle_option_client_port,
-    "-h": handle_option_server_ip,
-    "-p": handle_option_server_port,
+    "-h": handle_option_broker_ip,
+    "-p": handle_option_broker_port,
     "-f": handle_option_command_file,
     "-v": handle_option_verbose,
   }
@@ -234,7 +215,7 @@ def handle_command_line_args():
         i -= 1
     i += 2
 
-  if not id or not client_port or not server_ip or not server_port:
+  if not id or not client_port or not broker_ip or not broker_port:
     print("Arguments missing")
     return -1
 
@@ -246,12 +227,9 @@ ret_val = handle_command_line_args()
 if ret_val != -1:
   log("Publisher process started")
 
-  #We need to generate public and private RSA keys, and send to the associated proxy node before we start sending to
-  #the broker node.
-  #NOTE: This code is not yet complete.
-  generateKeys()
-  send_proxynode_message()
-
+  #We need to randomly pick a proxy node that we are going to send to.
+  #Then we need to encrypt the message + sign the message before we send it to the broker (but we have to keep
+  #the ip/port of the proxy node we want intact otherwise we don't know what proxy node to send to)
 
   handle_command_file()
   handle_cli_commands()
