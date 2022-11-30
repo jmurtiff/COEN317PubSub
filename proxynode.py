@@ -8,7 +8,7 @@ import json
 global proxy_publicKey
 global proxy_privateKey
 
-#Proxy node id for differentiating proxy nodes from one another. We change change this in CLI.
+#Proxy node id for differentiating proxy nodes from one another. We change change this in CLI (I still need to write this).
 id = "proxy1"
 
 #This is the ip address of the broker that is sending messages to the proxy node, this is set statically.
@@ -22,13 +22,14 @@ broker_receiving_port = None
 #broker.
 broker_sending_port = None
 
-#Proxy node needs to know to which subscriber (ip + port) to send its messages to.
+#Proxy node needs to know to which subscriber (ip + port) to send the appropriate messages to.
 proxy_node_sending_ip = None
 proxy_node_sending_port = None
 
-#Proxy node needs to know to which (ip + port) to receive messages from the lead proxy node.
+#Proxy node needs to know to which (ip + port) to receive messages from the lead proxy node (also helps with
+#handling leader election).
 proxy_node_receiving_ip = None
-proxy_node_sending_port = None
+proxy_node_receiving_port = None
 
 #Verbose output for more details printed to log.
 verbose = False
@@ -39,10 +40,8 @@ EOT_CHAR = b"\4"
 BUFFER_SIZE = 1024
 
 #ADDED Code
-#This function generates a new entry for the JSON file that we eventually have to send to publishers.
-#We need to append to the file for each proxy node that exists with all the relevant information.
-#We also need to take into account the fact that multiple proxy nodes may append to this file at 
-#the same time, which could be an issue.
+#This function generates a new JSON entry that will be sent to the broker to be appended into one JSON file.
+#We need to send through the socket all relevant information that a publisher should need
 def generate_JSON_Dictionary():
   
   #Generate one pair of private and public keys (let's make this the proxy's node's keys)
@@ -61,8 +60,8 @@ def generate_JSON_Dictionary():
   #NOTE: This code will now be in the broker.
 
   dictionary = {
-    "IP": proxy_node_ip,
-    "port": proxy_node_port,
+    "IP": proxy_node_receiving_ip,
+    "port": proxy_node_receiving_port,
     "ID": id,
     "public-key": proxy_publicKey,
     "is-leader": False,
@@ -112,11 +111,20 @@ def verify(message, signature, key):
     except:
         return False
 
-#Need to add a function to receive messages from broker (and then save to send to leader proxy node).
+#Need to add a function to continually receive messages from broker (like a thread) and then send to leader proxy node.
+#Need to make sure that leader proxy node has receiving proxy node ip and port (so it knows where to forward messages to).
 
 #Need to add a function to decrypt + verify messages + send messages to subscribers.
 
 #Need to add function to handle leader election for proxy nodes.
+#Bully algorithm based on IDs --> information that it needs for other proxy nodes is in JSON file 
+
 
 #Need to write code to handle command line arguments (similar to other two files) to specific proxy node ip address 
 #and port number.
+
+#Proxy node is being created
+#generate_JSON_Dictionary is done first
+#Sleep for some times until broker has complete JSON file for all proxy nodes + publisher proxy nodes 
+
+#When the first proxy node, 

@@ -35,6 +35,12 @@ verbose = False
 EOT_CHAR = b"\4"
 BUFFER_SIZE = 1024
 
+#NOTE: Need to add RSA in publisher, create public and private keys and handle signing and encryption
+#Sends JSON information with publisher ID + public key to broker --> broker creates new JSON file with publisher public keys + ID
+#H
+def generateKeys():
+    (publicKey, privateKey) = rsa.newkeys(1024)
+
 #ADDED CODE
 #This is good, doesn't have to change.
 #This function takes in a message and either the public or private key and encrypts the message
@@ -66,6 +72,8 @@ def send_message(message):
 
     # Send message to the broker.
     message = bytes(message, 'UTF-8')
+
+    #Publisher needs to pick a random proxy node so it know which public key to use to encrypt itself, 
 
     #NOTE:Need to encrypt message using RSA before sending it, but we don't want to encrypt sending the public
     # key to the proxy node first. So we need a variable here that has a socket connection with a proxy node first
