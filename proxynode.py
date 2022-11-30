@@ -5,7 +5,8 @@ import rsa
 import logging
 import json
 
-global privateKey
+global proxy_publicKey
+global proxy_privateKey
 
 #Proxy node id for differentiating proxy nodes from one another.
 id = "proxy1"
@@ -35,14 +36,25 @@ BUFFER_SIZE = 1024
 #We also need to take into account the fact that multiple proxy nodes may append to this file at 
 #the same time, which could be an issue.
 def generate_JSON_File():
-  (publicKey, privateKey) = rsa.newkeys(1024)
+  
+  #Generate one pair of private and public keys (let's make this the proxy's node's keys)
+  (proxy_publicKey, proxy_privateKey) = rsa.newkeys(1024)
+
+  #Generate another pair of private and public keys (let's make this the publisher's keys)
+  (pub_publicKey, pub_privateKey) = rsa.newkeys(1024)
+
+  #Maybe we should create a different JSON file that hold publisher ID and public key of the publisher, 
+  #that would make it easier for encryption and signature verification since we don't know what proxy 
+  #node is going to receive what message from what publisher.
+
+
   with open(proxy.json, "r") as file:
     data = json.load(file)
   dictionary = {
     "IP": proxy_node_ip,
     "port": proxy_node_port,
     "ID": id,
-    "public-key": publicKey,
+    "public-key": proxy_publicKey,
     "is-leader": False,
     "is-live": True
 }
