@@ -59,13 +59,13 @@ def encrypt(message, key):
 def sign(message, key):
   return rsa.sign(message.encode('ascii'), key, 'SHA-1')
 
-
+#QUESTION: Why do we need to include clientIP and clientPort for message?
 def get_proxy_nodes():
   # construct the request to be sent to the broker; NOTE: can set client port to be something else
   request = json.dumps({
     "getProxyNodes": True,
-    "clientIP": "127.0.0.1",
-    "clientPort": 100
+    "clientIP": broker_ip,
+    "clientPort": broker_port
   })
 
   # connect to the broker, send the request, and then receive the data from the broker's proxy.json replica
