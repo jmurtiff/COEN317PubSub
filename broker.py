@@ -268,8 +268,7 @@ def proxythread():
             if dict['ID'] == proxyleader_ID:
               dict['is-leader'] = True
 
-        # Send election message with proxy.json file to new proxy leader
-        with open("proxy.json", "r") as infile:
+          # Send election message with proxy.json file to new proxy leader
           dictionary = {
             "election-message": True,
             "proxy-list": json.loads(infile)
