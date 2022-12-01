@@ -149,20 +149,21 @@ def send_message(message,topic):
           proxy_port = line['port']
           proxy_public_key = line['public-key']
 
-    #We need to encrypt using the public key of the proxy node, which we have to read from the JSON file itself.
-    encrypt(message,proxy_public_key)
-
     #We need to sign using the private key of the publisher.
-    sign(message,privateKey)
+    signature = sign(message,privateKey)
+
+    #We need to encrypt using the public key of the proxy node, which we have to read from the JSON file itself.
+    encrypted_message = encrypt(message,proxy_public_key)
 
     #Create a partially encrypted message that contains relevant information as well as the message the 
     #publisher creates.
     final_message = {
-      "Payload": message,
+      "Payload": encrypted_message,
       "Publisher-ID": id,
       "Proxy-IP": proxy_ip,
       "Proxy-Port": proxy_port,
-      "Topic": topic
+      "Topic": topic,
+      "Signature": signature
     }
     
     s.sendall(final_message + EOT_CHAR)
