@@ -41,26 +41,23 @@ timestamp = 0
 def log(message):
   print("[BROKER] " + message);
 
-#Take in a message from a publisher, and if it matches a specific topic, then send the 
-#message to the appropriate subscriber.
+#Take in a message from a publisher and route to the known proxy leader
 #NOTE: This code will not work if the message is encrypted, because we can't take apart the message 
 #to know the topic and other elements, so in this case we may have to find a way to allow the topic
 #of a message to be transmitted separately so we can send to the correct proxy node.
 def handle_pub_message(data):
-  data = data.decode().split()
-  data = [data[0], data[1], data[2], ' '.join(data[3:])]
-  pub_id = data[0]
-  topic = data[2]
-  message = data[3]
-  sub_count = 0
-  for sub in subscriptions:
-    if sub['topic'] == topic:
-      sub_count += 1
-      if verbose: log(f"Sending message \"{message}\" to {sub['id']} @ {sub['ip']}:{sub['port']}")
-      send_message(message, sub['ip'], sub['port'])
-  log(f"{pub_id} published to {topic} ({sub_count} subs): {message}")
+  #Find ip and port of leader proxy node, from proxy.json
+  with open('proxy.json') as infile:
+    data = json.load(infile)
+    for dict in data:
+        if dict['is-leader'] == True:
+            proxyleader_ip = dict['ID']
+            proxyleader_port = dict['port']
 
-#Function to set up socket between broker and subscriber, and then send
+  send_message(data, proxyleader_ip, proxyleader_port)
+  log(f"Data published to proxy leader: {data}")
+
+#Function to set up socket between broker and proxy, and then send
 #message passed as argument. The socket is TCP, not entirely sure if 
 #we want to use TCP or not for this communication. 
 #UDP is socket.SOCK_DGRAM instead of socket.SOCK_STREAM
@@ -68,11 +65,10 @@ def send_message(message, ip, port):
   with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     # Setup socket and connect
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    #This is binding the port from subscriber to broker.
-    s.bind((host, sub_port + port_offset))
+    #This is binding the port from proxy to broker.
+    s.bind((host, proxy_port + port_offset))
 
-    #Connect to the subscriber's port and IP address --> we need to change this to the proxy node's information
-    #once we get the implementation set up.
+    #Connect to the proxy's port and IP address
     connected = False
     while not connected:
       try:
