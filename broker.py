@@ -51,7 +51,7 @@ def handle_pub_message(data):
     for line in infile:
         dict = json.loads(line)
         if dict['is-leader'] == True:
-            proxyleader_ip = dict['ID']
+            proxyleader_ip = dict['IP']
             proxyleader_port = dict['port']
 
     
