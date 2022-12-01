@@ -47,7 +47,7 @@ def log(message):
 #of a message to be transmitted separately so we can send to the correct proxy node.
 def handle_pub_message(data):
   #Find ip and port of leader proxy node, from proxy.json
-  with open('proxy.json') as infile:
+  with open("proxy.json", "r") as infile:
     for line in infile:
         dict = json.loads(line)
         if dict['is-leader'] == True:
@@ -147,10 +147,17 @@ def pubthread():
         # Send OK response
         conn.sendall(b"OK")
 
-      ######## LOGIC TO DETECT getProxyNodes header ########
-
-      ######################################################
-      handle_pub_message(data)
+      # Detect get_proxy_nodes header
+      convertData = json.loads(data)
+      try:
+        convertData['getProxyNodes']
+      except:
+        # If not a request for proxy nodes file, pass message to proxy nodes
+        handle_pub_message(data)
+      else:
+        # Send proxy file to publisher if requested
+        with open("proxy.json", "r") as infile:
+          conn.sendall(infile.read())
 
 #Add to the subscriptions array with each subscriber based on their id, topic, ip, and port
 #Maybe we can have this list as part of each proxy node to keep track of relevant information for
