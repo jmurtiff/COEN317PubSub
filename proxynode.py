@@ -131,30 +131,58 @@ def verify(message, signature, key):
 #   <publisher ID>: <public_key of publisher>,
 #   ...
 # }
-def store_publisher_public_keys(data):
+def store_publisher_public_keys(id, public_key):
   # if file already exists, update with new key
   if os.path.exists("publisher.json"):
     with open("publisher.json", "r+") as file:
       data = json.loads(file.read())
-      data[data["ID"]] = data["public-key"]
+      data[id] = public_key
       file.seek(0)
       json.dump(data, file)
       file.truncate()
+      file.close()
   else:
     # otherwise instantiate the file and create a new dictionary 
-    new_data = { data["ID"]: data["public-key"] }
+    new_data = { id: public_key }
     with open("publisher.json", "w") as file:
       json.dump(new_data, file)
+      file.close()
   
-
+#Because we don't have to parse the JSON itself, we can simply store the JSON string into the file 
 def store_child_proxy_nodes(proxy_list):
-  return 
+  with open("proxy.json", "w") as file:
+    file.write(proxy_list)
+    file.close()
   
-def send_elected_messages(proxy_list):
-  return
+#The leader proxy node will have already have the other proxy nodes' information
+def send_elected_messages():
+  message = { "Elected": True } 
+  with open("proxy.json", "r") as file:
+    for line in file:
+      line = json.loads(line)
+      # proxy node leader sends to everyone but itself 
+      if line["ID"] != id:
+        # send the mes
+        proxy_node_ip = line["IP"]
+        proxy_node_port = line["port"]
+        response = send_message(message, proxy_node_ip, proxy_node_port)
 
-def send_messages():
-  return
+        # isn't really needed since TCP is being used but just a safeguard
+        while response != "OK":
+          response = send_message(message, proxy_node_ip, proxy_node_port)
+
+# simply send the message to destination process to be handled, and return the response
+def send_message(message, ip, port):
+  with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    # Setup socket and connect
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    # connect to the destination machine/process
+    s.connect((ip, port))
+    # Send message
+    message = message.encode("UTF-8")
+    s.sendall(message + EOT_CHAR)
+    return s.recv(BUFFER_SIZE)
 
 #This function allows the current proxy node to listen to incoming messages from EITHER the broker or proxy node leader
 #2 scenarios that may occur:
@@ -187,12 +215,12 @@ def receiverthread():
 
         # check if leader election has occurred, send elected messages to other proxy nodes, and store information about all proxy nodes 
         if decoded_data["election-message"]:
-          store_child_proxy_nodes()
+          store_child_proxy_nodes(decoded_data['proxy-list'])
           send_elected_messages()
           
         # If publisher has sent its public key for signing --> store the public key and send to other proxy nodes 
         if "public-key" in decoded_data: 
-          store_publisher_public_keys(decoded_data)
+          store_publisher_public_keys(decoded_data["ID"], decoded_data["public-key"])
 
         # once all of the data has been received, check the receiving_IP + receiving_PORT in the messages
         if decoded_data['Proxy-IP'] == proxy_node_receiving_ip and decoded_data['Proxy-Port'] == proxy_node_receiving_port:
