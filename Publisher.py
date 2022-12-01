@@ -40,7 +40,7 @@ BUFFER_SIZE = 1024
 
 #Log function, prints out broker + specific message
 def log(message):
-  print("[BROKER] " + message);
+  print("[PUBLISHER] " + message);
 
 #NOTE: Need to add RSA in publisher, create public and private keys and handle signing and encryption
 #Sends JSON information with publisher ID + public key to broker --> broker creates new JSON file with publisher public keys + ID
@@ -127,9 +127,6 @@ def send_message(message):
 #Publish function logs and then calls send_message to send message to a broker.
 #Acknowledges a message has been received by broker if verbose output is enabled, 
 #Message includes publisher id, the topic, as well as the message itself.
-
-#NOTE: This code will be a problem if we encrypt it as the message as the return value will
-#not be able to deceiver the different parts of the message. We need to change this function.
 def publish(topic, message):
   log(f"Publishing to {topic}: {message}")
   response = send_message(id + " pub " + topic + " " + message)
