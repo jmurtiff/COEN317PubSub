@@ -96,6 +96,16 @@ def decrypt(ciphertext, key):
         return rsa.decrypt(ciphertext, key).decode('ascii')
     except:
         return False
+  
+# when verifying the identity of the publisher of the message, get the publisher's public key given an ID
+def get_public_key(publisher_id):
+  with open("publisher.json", "r") as file:
+    for line in file:
+      line = json.loads(line)
+      if line["ID"] == publisher_id:
+        return line["public-key"]
+  # if no public key is found that means the message is malicious and to drop it
+  return None
 
 #Once decryption and verification have been successfully performed, send message to the subscriber 
 def send_message_to_subscriber(message, sub_ip, sub_port):
@@ -155,8 +165,11 @@ def store_child_proxy_nodes(proxy_list):
     file.close()
   
 #The leader proxy node will have already have the other proxy nodes' information
-def send_elected_messages():
-  message = { "Elected": True } 
+def send_elected_messages(proxy_list):
+  message = { 
+    "Elected": True,
+    "proxy-list": proxy_list
+  } 
   with open("proxy.json", "r") as file:
     for line in file:
       line = json.loads(line)
@@ -213,23 +226,30 @@ def receiverthread():
             
         decoded_data = json.loads(data.decode("UTF-8"))
 
-        # check if leader election has occurred, send elected messages to other proxy nodes, and store information about all proxy nodes 
-        if decoded_data["election-message"]:
+        # check if leader election has occurred, the new leader sends elected messages to other proxy nodes, and store information about all proxy nodes 
+        if "election-message" in decoded_data and decoded_data["election-message"]:
           store_child_proxy_nodes(decoded_data['proxy-list'])
-          send_elected_messages()
+          send_elected_messages(decoded_data['proxy-list'])
+        
+        # if the current proxy node is NOT the leader but gets the Elected message, store the proxy-list embedded in the message
+        if "Elected" in decoded_data and decoded_data["Elected"]: 
+          store_child_proxy_nodes(decoded_data['proxy-list'])
           
         # If publisher has sent its public key for signing --> store the public key and send to other proxy nodes 
         if "public-key" in decoded_data: 
           store_publisher_public_keys(decoded_data["ID"], decoded_data["public-key"])
 
-        # once all of the data has been received, check the receiving_IP + receiving_PORT in the messages
+        # if data is a published event message, check the receiving_IP + receiving_PORT in the messages
         if decoded_data['Proxy-IP'] == proxy_node_receiving_ip and decoded_data['Proxy-Port'] == proxy_node_receiving_port:
           decrypted_message = decrypt(decoded_data["Message"], proxy_privateKey)
-          verified = verify(decoded_data["Message"], decoded_data["Signature"], proxy_privateKey)
-          
-          # once decryption and verification is done
-          if verified == "SHA-1" and decrypted_message:
-            send_message_to_subscribers(decrypted_message, decoded_data["Subscribers"])
+          publisherPublicKey = get_public_key(decoded_data["Publisher-ID"])
+
+          # as long as the publisher's public key can be found, perform rest of verification/authentication before sending to subscribers
+          if publisherPublicKey is not None:
+            verified = verify(decoded_data["Message"], decoded_data["Signature"], publisherPublicKey)
+            # once decryption and verification is done
+            if verified == "SHA-1" and decrypted_message:
+              send_message_to_subscribers(decrypted_message, decoded_data["Subscribers"])
         else:
           # this proxy node must be the leader and is NOT the intended recipient, so send the message to other proxy node
           response = send_message_to_proxy(data, decoded_data['Proxy-IP'], decoded_data['Proxy-Port'])
@@ -282,10 +302,6 @@ def handle_broker_port(arguments, i):
     print("Invalid broker port")
     return - 1
   return 1 
-
-#This thread handles messages for leader election 
-def leaderelectionthread():
-  return 
 
 def handle_command_line_args():
   options = {
