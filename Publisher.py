@@ -89,7 +89,7 @@ def generate_JSON_ID_PublicKey(message):
 #message passed as argument. The socket is TCP, not entirely sure if 
 #we want to use TCP or not for this communication. 
 #UDP is socket.SOCK_DGRAM instead of socket.SOCK_STREAM
-def send_message(message):
+def send_message(message,topic):
   with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     # Setup socket and connect
 
@@ -103,33 +103,35 @@ def send_message(message):
     # Send message to the broker.
     message = bytes(message, 'UTF-8')
 
-    #Publisher needs to pick a random proxy node so it know which public key to use to encrypt itself. 
-    #We have to read the proxy.json file, pick one of the nodes at random, and then use that information 
-    #to help encrypt the message. And in this case we have to add on to the publisher message 
-    #random_proxy_node = random.randint(1, proxy_node_count)
+    #Is this return value a list or a dictionary?
+    random_proxy_node = random.randint(1, proxy_node_count)
 
-    #Each line is a dictionary, so we have to seperate out each list 
-    with open(proxy.json, 'r') as file:
-        data = [json.loads(line) for line in file]
-    random.choice(data)
-
-    
+    with open("proxy.json", "r") as file:
+      for index, line in enumerate(file):
+        if index == random_proxy_node:
+          line = json.loads(line)
+          # get the public key from there
+          proxy_ip = line['IP']
+          proxy_port = line['port']
+          proxy_public_key = line['public-key']
 
     #We need to encrypt using the public key of the proxy node, which we have to read from the JSON file itself.
-    encrypt(message,)
+    encrypt(message,proxy_public_key)
 
-    sign(message, privateKey)
+    #We need to sign using the private key of the publisher.
+    sign(message,privateKey)
 
-    #Send 
+    #Create a partially encrypted message that contains relevant information as well as the message the 
+    #publisher creates.
     final_message = {
-      "Message": message,
+      "Payload": message,
       "Publisher-ID": id,
-      "Proxy-IP": 
-      "Proxy-Port":
+      "Proxy-IP": proxy_ip,
+      "Proxy-Port": proxy_port,
+      "Topic": topic
     }
     
-
-    s.sendall(message + EOT_CHAR)
+    s.sendall(final_message + EOT_CHAR)
 
     # Wait for OK response
     return s.recv(BUFFER_SIZE)
@@ -138,12 +140,9 @@ def send_message(message):
 #Publish function logs and then calls send_message to send message to a broker.
 #Acknowledges a message has been received by broker if verbose output is enabled, 
 #Message includes publisher id, the topic, as well as the message itself.
-
-#NOTE: This code will be a problem if we encrypt it as the message as the return value will
-#not be able to deceiver the different parts of the message. We need to change this function.
 def publish(topic, message):
   log(f"Publishing to {topic}: {message}")
-  response = send_message(id + " pub " + topic + " " + message)
+  response = send_message(id + " pub " + topic + " " + message, topic)
   if verbose: log(f"Received {response.decode()} from broker")
 
 #This function checks to see whether the user has entered an incorrect command line interface command.
