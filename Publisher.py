@@ -4,6 +4,7 @@ from sys import argv
 import rsa
 import logging
 import json
+import random 
 
 #This is good, doesn't have to change.
 #Publisher id for differentiating publishers between one another. We can change these values
@@ -35,7 +36,6 @@ BUFFER_SIZE = 1024
 
 #NOTE: Need to add RSA in publisher, create public and private keys and handle signing and encryption
 #Sends JSON information with publisher ID + public key to broker --> broker creates new JSON file with publisher public keys + ID
-#H
 def generateKeys():
     (publicKey, privateKey) = rsa.newkeys(1024)
     return publicKey,privateKey
@@ -74,7 +74,7 @@ def generate_JSON_ID_PublicKey(message):
     # Setup socket and connect
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
-    #Connect to the broker's IP address and port to send JSON to the broker.
+    #Connect to the broker's IP address and port to send JSON information to the broker.
     s.connect((broker_ip, broker_port))
 
     # Send message to the broker.
@@ -103,13 +103,19 @@ def send_message(message):
     # Send message to the broker.
     message = bytes(message, 'UTF-8')
 
-    #Publisher needs to pick a random proxy node so it know which public key to use to encrypt itself.
+    #Publisher needs to pick a random proxy node so it know which public key to use to encrypt itself. 
+    #We have to read the proxy.json file, pick one of the nodes at random, and then use that information 
+    #to help encrypt the message. And in this case we have to add on to the publisher message 
+    random_proxy_node = random.randint(1, proxy_node_count)
+
+    
+    
 
     #We need to encrypt using the public key of the proxy node, which we have to read from the JSON file itself.
     encrypt(message,)
 
     sign(message, privateKey)
-    
+
     payload = # SEPARATE MESSAGE
     encrypt(payload)
     request = {
@@ -269,9 +275,8 @@ ret_val = handle_command_line_args()
 if ret_val != -1:
   log("Publisher process started")
 
-  #We need to randomly pick a proxy node that we are going to send to.
-  #Then we need to encrypt the message + sign the message before we send it to the broker (but we have to keep
-  #the ip/port of the proxy node we want intact otherwise we don't know what proxy node to send to)
+  #First we need to get proxy node information (I assume this will be a thread that runs continually).
+  #Then, once we have that information, we can start sending encrypted + signed messages to the broker.
 
   handle_command_file()
   handle_cli_commands()

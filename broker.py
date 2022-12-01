@@ -67,7 +67,7 @@ def send_message(message, ip, port):
     #This is binding the port from subscriber to broker.
     s.bind((host, sub_port + port_offset))
 
-    #Connect to the subscriber's port and IP address --> we need to change this to the proxy node's information
+    #Connect to the subscriber's port and IP address --> we need to change this to the leader proxy node's information
     #once we get the implementation set up.
     connected = False
     while not connected:
