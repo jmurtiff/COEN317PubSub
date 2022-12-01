@@ -54,6 +54,40 @@ def handle_pub_message(data):
             proxyleader_ip = dict['ID']
             proxyleader_port = dict['port']
 
+    
+    topic = data["Topic"]
+    # because the number of subscribers is dynamic by nature in a pubsub system, it is easier to handle subscriber 
+    # information at the the broker level instead of having to possibly maintain replicas of subscribers' information at 
+    # the proxy node layer
+    subscribers_to_send_to = {}
+
+    # subscribers to send to format: (unencrypted unfortunately)
+    # {
+    #   <sub_id>: {
+    #     IP: sub['ip'],
+    #     Port: sub['port']
+    #   },
+    #   <sub_id>: {...}
+    #       
+    # 
+    # }
+    # when proxy node gets this information:
+    # for sub in subscribers_to_send_to.keys():
+    #     send(decrypted message)
+    for sub in subscriptions:
+      if sub['topic'] == topic:
+        sub_count += 1
+        if verbose: log(f"Sending message to {sub['id']} @ {sub['ip']}:{sub['port']}")
+        subscribers_to_send_to[sub['id']] = {
+          "ip": sub['ip'],
+          "port": sub["port"]
+        }
+
+        # embed subscribers' information into message for proxy nodes to handle later
+        data["Subscribers"] = subscribers_to_send_to
+        log("Publisher ID: " + data["Publisher-ID"])
+        log(f"data published to {topic} ({sub_count} subs)")
+
   send_message(data, proxyleader_ip, proxyleader_port)
   log(f"Data published to proxy leader: {data}")
 
