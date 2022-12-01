@@ -48,8 +48,8 @@ def log(message):
 def handle_pub_message(data):
   #Find ip and port of leader proxy node, from proxy.json
   with open('proxy.json') as infile:
-    data = json.load(infile)
-    for dict in data:
+    for line in infile:
+        dict = json.loads(line)
         if dict['is-leader'] == True:
             proxyleader_ip = dict['ID']
             proxyleader_port = dict['port']
@@ -68,7 +68,7 @@ def send_message(message, ip, port):
     #This is binding the port from proxy to broker.
     s.bind((host, proxy_port + port_offset))
 
-    #Connect to the proxy's port and IP address
+    #Connect to the target's port and IP address
     connected = False
     while not connected:
       try:
