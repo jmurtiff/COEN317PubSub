@@ -3,9 +3,7 @@ from time import sleep
 from sys import argv
 import rsa
 import logging
-
-global publicKey
-global privateKey
+import json
 
 #This is good, doesn't have to change.
 #Publisher id for differentiating publishers between one another. We can change these values
@@ -40,6 +38,8 @@ BUFFER_SIZE = 1024
 #H
 def generateKeys():
     (publicKey, privateKey) = rsa.newkeys(1024)
+    return publicKey,privateKey
+
 
 #ADDED CODE
 #This is good, doesn't have to change.
@@ -53,6 +53,36 @@ def encrypt(message, key):
 #This function takes in a message and a key and signs the message using SHA-1.
 def sign(message, key):
   return rsa.sign(message.encode('ascii'), key, 'SHA-1')
+
+
+#ADDED Code
+#This function generates a pair of private and public keys and sends the publicKey as well as the
+#publisher's ID to the broker to generate a JSON file that can be used when we send messages to
+#the broker and to know which publicKey we should use when the proxy node has to verify the message 
+#sent to it.
+def generate_JSON_ID_PublicKey(message):
+  global publicKey, privateKey
+  publicKey, privateKey = generateKeys()
+  dictionary = {
+    "ID": id,
+    "public-key": publicKey
+}
+
+  data = json.dumps(dictionary)
+
+  with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    # Setup socket and connect
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+
+    #Connect to the broker's IP address and port to send JSON to the broker.
+    s.connect((broker_ip, broker_port))
+
+    # Send message to the broker.
+    message = bytes(data,'UTF-8')
+    s.sendall(message + EOT_CHAR)
+
+    # Wait for OK response
+    return s.recv(BUFFER_SIZE)
 
 
 #Function to set up socket between publisher and broker, and then send
