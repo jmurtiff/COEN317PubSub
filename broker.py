@@ -201,7 +201,7 @@ def proxythread():
       if exists("proxy.json"):
         with open("proxy.json", "a") as file:
           file.write("\n")
-          json.dump(json.loads(data.decode("UTF_8")), file)s
+          json.dump(json.loads(data.decode("UTF_8")), file)
       else:
         with open("proxy.json", "w") as file:
           json.dump(json.loads(data.decode("UTF-8")), file)
