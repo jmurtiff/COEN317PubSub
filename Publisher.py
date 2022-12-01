@@ -106,9 +106,13 @@ def send_message(message):
     #Publisher needs to pick a random proxy node so it know which public key to use to encrypt itself. 
     #We have to read the proxy.json file, pick one of the nodes at random, and then use that information 
     #to help encrypt the message. And in this case we have to add on to the publisher message 
-    random_proxy_node = random.randint(1, proxy_node_count)
+    #random_proxy_node = random.randint(1, proxy_node_count)
 
-    
+    #Each line is a dictionary, so we have to seperate out each list 
+    with open(proxy.json, 'r') as file:
+        data = [json.loads(line) for line in file]
+    random.choice(data)
+
     
 
     #We need to encrypt using the public key of the proxy node, which we have to read from the JSON file itself.
@@ -116,11 +120,12 @@ def send_message(message):
 
     sign(message, privateKey)
 
-    payload = # SEPARATE MESSAGE
-    encrypt(payload)
-    request = {
-      "other headers": "Nice",
-      "payload": payload
+    #Send 
+    final_message = {
+      "Message": message,
+      "Publisher-ID": id,
+      "Proxy-IP": 
+      "Proxy-Port":
     }
     
 
