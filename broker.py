@@ -100,13 +100,13 @@ def send_message(message, ip, port):
     # Setup socket and connect
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     #This is binding the port from proxy to broker.
-    s.bind((host, proxy_port + port_offset))
+    s.bind((ip, port))
 
     #Connect to the target's port and IP address
     connected = False
     while not connected:
       try:
-        s.connect((ip, port + port_offset))
+        s.connect((ip, port))
         connected = True
       except:
         log("Error on connection. Retrying in 30 seconds...")
@@ -261,18 +261,24 @@ def proxythread():
                 proxyleader_ip = dict['IP']
                 proxyleader_port = dict['port']
 
-        # Update flag to mark highest-id proxy leader as leader -- not entirely sure if this is correct
+        # Update flag to mark highest-id proxy leader as leader
         with open("proxy.json", "r+") as infile:
-          for line in infile:
-            dict = json.loads(line)
+          data = infile.readlines()
+          for i, entry in enumerate(infile):
+            dict = json.loads(entry)
             if dict['ID'] == proxyleader_ID:
-              dict['is-leader'] = True
-              line = json.dump(dict)
+              newData = json.loads(data[i])
+              newData['is-leader'] = True
+              data[i] = json.dump(newData)
+              break
+          infile.seek(0)  
+          json.dump(data, infile)
+          infile.truncate()
 
           # Send election message with proxy.json file to new proxy leader
           dictionary = {
             "election-message": True,
-            "proxy-list": json.loads(infile)
+            "proxy-list": infile.read()
           }
           send_message(dictionary, proxyleader_ip, proxyleader_port)
         
