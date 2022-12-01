@@ -103,14 +103,20 @@ def send_message(message):
     # Send message to the broker.
     message = bytes(message, 'UTF-8')
 
-    #Publisher needs to pick a random proxy node so it know which public key to use to encrypt itself, 
+    #Publisher needs to pick a random proxy node so it know which public key to use to encrypt itself.
 
-    #NOTE:Need to encrypt message using RSA before sending it, but we don't want to encrypt sending the public
-    # key to the proxy node first. So we need a variable here that has a socket connection with a proxy node first
-    #to send the key to an established proxy node before sending it to the broker that sends it to the same proxy node.
+    #We need to encrypt using the public key of the proxy node, which we have to read from the JSON file itself.
+    encrypt(message,)
+
+    sign(message, privateKey)
     
-    #NOTE: We can create a new function to handle this first before we call send_message(message), but then afterwards we 
-    #have to handle telling the broker to what proxy node to send the information to. 
+    payload = # SEPARATE MESSAGE
+    encrypt(payload)
+    request = {
+      "other headers": "Nice",
+      "payload": payload
+    }
+    
 
     s.sendall(message + EOT_CHAR)
 
