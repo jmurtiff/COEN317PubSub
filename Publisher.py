@@ -278,10 +278,7 @@ def handle_command_line_args():
 ret_val = handle_command_line_args()
 if ret_val != -1:
   log("Publisher process started")
-
-  #First we need to get proxy node information (I assume this will be a thread that runs continually).
-  #Then, once we have that information, we can start sending encrypted + signed messages to the broker.
-
+  generate_JSON_ID_PublicKey()
   handle_command_file()
   handle_cli_commands()
 else:
