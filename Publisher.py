@@ -23,6 +23,7 @@ broker_port = None
 #have created and was sent to us by the broker.
 proxy_ip = None
 proxy_port = None
+proxy_node_count = 0
 
 #This is good, doesn't have to change.
 #Verbose output for more details printed to log. 
@@ -33,6 +34,10 @@ verbose = False
 #checking if message went through correctly).
 EOT_CHAR = b"\4"
 BUFFER_SIZE = 1024
+
+#Log function, prints out broker + specific message
+def log(message):
+  print("[PUBLISHER] " + message);
 
 #NOTE: Need to add RSA in publisher, create public and private keys and handle signing and encryption
 #Sends JSON information with publisher ID + public key to broker --> broker creates new JSON file with publisher public keys + ID
@@ -54,6 +59,35 @@ def encrypt(message, key):
 def sign(message, key):
   return rsa.sign(message.encode('ascii'), key, 'SHA-1')
 
+
+def get_proxy_nodes():
+  # construct the request to be sent to the broker; NOTE: can set client port to be something else
+  request = json.dumps({
+    "getProxyNodes": True,
+    "clientIP": "127.0.0.1",
+    "clientPort": 100
+  })
+
+  # connect to the broker, send the request, and then receive the data from the broker's proxy.json replica
+  with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.connect((broker_ip, broker_port))
+    request = request.encode("UTF-8")
+    s.sendall(request)
+    
+    data = b""
+    # because we've connected to the broker, we can read in the broker's reply (JSON file contents)
+    while True:
+      data += s.recv(BUFFER_SIZE)
+      # no more data to send ==> the socket connection will close 
+      if len(data) < 1:
+        break
+    
+    data = data.decode("UTF-8")
+    proxy_node_count = data.count("{") # the number of '{' indicates how many rows of JSON there are
+
+    # after receiving all of the JSON data, dump that JSON data into own proxy.json replica
+    with open("proxy.json", "w") as file:
+      file.write(data)
 
 #ADDED Code
 #This function generates a pair of private and public keys and sends the publicKey as well as the
@@ -278,6 +312,7 @@ def handle_command_line_args():
 ret_val = handle_command_line_args()
 if ret_val != -1:
   log("Publisher process started")
+  get_proxy_nodes()
   generate_JSON_ID_PublicKey()
   handle_command_file()
   handle_cli_commands()
