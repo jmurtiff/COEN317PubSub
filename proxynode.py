@@ -124,6 +124,38 @@ def verify(message, signature, key):
     except:
         return False
 
+# Helper function called by receiverthread() that lets the proxy node store the publisher's public key for verification of signatures
+# Format of publisher.json:
+# {
+#   <publisher ID>: <public_key of publisher>,
+#   <publisher ID>: <public_key of publisher>,
+#   ...
+# }
+def store_publisher_public_keys(data):
+  # if file already exists, update with new key
+  if os.path.exists("publisher.json"):
+    with open("publisher.json", "r+") as file:
+      data = json.loads(file.read())
+      data[data["ID"]] = data["public-key"]
+      file.seek(0)
+      json.dump(data, file)
+      file.truncate()
+  else:
+    # otherwise instantiate the file and create a new dictionary 
+    new_data = { data["ID"]: data["public-key"] }
+    with open("publisher.json", "w") as file:
+      json.dump(new_data, file)
+  
+
+def store_child_proxy_nodes(proxy_list):
+  return 
+  
+def send_elected_messages(proxy_list):
+  return
+
+def send_messages():
+  return
+
 #This function allows the current proxy node to listen to incoming messages from EITHER the broker or proxy node leader
 #2 scenarios that may occur:
 # 1) If the current proxy node is the leader (broker is the sender):
@@ -152,6 +184,15 @@ def receiverthread():
             break
             
         decoded_data = json.loads(data.decode("UTF-8"))
+
+        # check if leader election has occurred, send elected messages to other proxy nodes, and store information about all proxy nodes 
+        if decoded_data["election-message"]:
+          store_child_proxy_nodes()
+          send_elected_messages()
+          
+        # If publisher has sent its public key for signing --> store the public key and send to other proxy nodes 
+        if "public-key" in decoded_data: 
+          store_publisher_public_keys(decoded_data)
 
         # once all of the data has been received, check the receiving_IP + receiving_PORT in the messages
         if decoded_data['Proxy-IP'] == proxy_node_receiving_ip and decoded_data['Proxy-Port'] == proxy_node_receiving_port:
@@ -251,7 +292,7 @@ def handle_command_line_args():
 ret_val = handle_command_line_args()
 if ret_val != -1:
   log("Proxy node process started")
-  #Instantiate any threads here and have them continuously running
+  #Create thread for receiving communications from broker/proxy node leader
   try:
     threading.Thread(target=receiverthread).start()
   except KeyboardInterrupt:
