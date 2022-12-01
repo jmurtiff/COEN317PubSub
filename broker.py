@@ -100,13 +100,13 @@ def send_message(message, ip, port):
     # Setup socket and connect
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     #This is binding the port from proxy to broker.
-    s.bind((host, proxy_port + port_offset))
+    s.bind((ip, port))
 
     #Connect to the target's port and IP address
     connected = False
     while not connected:
       try:
-        s.connect((ip, port + port_offset))
+        s.connect((ip, port))
         connected = True
       except:
         log("Error on connection. Retrying in 30 seconds...")
