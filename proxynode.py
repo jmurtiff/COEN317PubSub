@@ -4,6 +4,7 @@ from sys import argv
 import rsa
 import logging
 import json
+import threading
 
 global proxy_publicKey
 global proxy_privateKey
@@ -39,6 +40,10 @@ verbose = False
 EOT_CHAR = b"\4"
 BUFFER_SIZE = 1024
 
+#Log function, prints out broker + specific message
+def log(message):
+  print("[PROXY NODE] " + message);
+
 #ADDED Code
 #This function generates a new JSON entry that will be sent to the broker to be appended into one JSON file.
 #We need to send through the socket all relevant information that a publisher should need
@@ -55,7 +60,7 @@ def generate_JSON_Dictionary():
   #node is going to receive what message from what publisher.
 
   #NOTE: The below code will now be in the broker.
-  with open(proxy.json, "r") as file:
+  with open("proxy.json", "r") as file:
     data = json.load(file)
   #NOTE: This code will now be in the broker.
 
@@ -94,6 +99,25 @@ def generate_JSON_Dictionary():
   #NOTE: This code will now be in the broker.
   
 
+#If the current proxy node is NOT the intended recipient to perform decryption and verification, then this proxy node
+#must be the leader
+#Thus, the leader will funnel this message to the other proxy nodes to distribute the work 
+
+def send_message(message, recipient_proxy_ip, recipient_proxy_port):
+  """
+  message: the original bytestream of the message received from the socket
+  recipient_proxy_ip: the intended recipient's IP
+  recipient_proxy_port: the intended recipient's port
+  """
+
+  with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    # connect to the intended proxy node
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.connect((recipient_proxy_ip, recipient_proxy_port))
+
+    # once connected, send the message to recipient proxy node and receive the response
+    s.sendall(message)
+    return s.recv(BUFFER_SIZE).decode("UTF-8")
 
 #ADDED Code
 #Added code that can decrypt messages using an associated private or public key (in this case public key).
@@ -113,7 +137,47 @@ def verify(message, signature, key):
 
 #Need to add a function to continually receive messages from broker (like a thread) and then send to leader proxy node.
 #Need to make sure that leader proxy node has receiving proxy node ip and port (so it knows where to forward messages to).
+def brokerthread():
+  with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    # listen for any incoming communications from the broker or possibly leader proxy node
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    s.bind((proxy_node_receiving_ip, proxy_node_receiving_port))
+    s.listen()
 
+    # Accept connection from the broker
+    conn, addr = s.accept()
+    data = b""
+    with conn:
+      if verbose: log(f"Broker connected from {addr[0]}:{addr[1]}")
+      # Loop through connections until we get the EOT_CHAR (end-of-transmission)
+      while True:
+        data += conn.recv(BUFFER_SIZE)
+        if data[-1] == EOT_CHAR[0]:
+          data = data[:-1]
+          break
+          
+      # once all of the data has been received, check the receiving_IP + receiving_PORT in the messages
+      data = json.loads(data.decode("UTF-8"))
+      decoded_data = json.loads(data.decode("UTF-8"))
+
+      # if this proxy node is the intended recipient, perform the decryption and verification 
+      if decoded_data['Proxy-IP'] == proxy_node_receiving_ip and decoded_data['Proxy-Port'] == proxy_node_receiving_port:
+        decrypted = decrypt(decoded_data["Message"], proxy_privateKey)
+        verified = verify(decoded_data["Message"], decoded_data["Signature"], proxy_privateKey)
+      else:
+        # this proxy node must be the leader and is NOT the intended recipient, so send the message to other proxy node
+        response = send_message(data, decoded_data['Proxy-IP'], decoded_data['Proxy-Port'])
+
+        # resend the message if necessary 
+        while response != "OK":
+          response = send_message(data, decoded_data['Proxy-IP'], decoded_data['Proxy-Port'])
+
+
+#Instantiate any threads here and have them continuously running
+try:
+  threading.Thread(target=brokerthread).start()
+except KeyboardInterrupt:
+  exit(0)
 #Need to add a function to decrypt + verify messages + send messages to subscribers.
 
 #Need to add function to handle leader election for proxy nodes.
