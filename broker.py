@@ -216,32 +216,66 @@ def subthread():
 
 #Handles incoming proxy node messages that are sending JSON information
 def proxythread():
-  with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-    # Setup socket and listen for connections
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind((host, proxy_port))
-    s.listen()
+  while True:
+    with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+      # Setup socket and listen for connections, set a timeout to detect when no new proxy nodes are being added
+      s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+      s.bind((host, proxy_port))
+      s.listen()
+      s.settimeout(300)
 
-    # Accept connections
-    conn, addr = s.accept()
-    data = b""
-    with conn:
-      if verbose: log(f"Proxy node connected from {addr[0]}:{addr[1]}")
-      # Loop through connections until we get the EOT_CHAR (end-of-transmission)
-      while True:
-        data += conn.recv(BUFFER_SIZE)
-        if data[-1] == EOT_CHAR[0]:
-          data = data[:-1]
-          break
-      
-      # write/append rows of JSON to the broker's replica of proxy.json
-      if exists("proxy.json"):
-        with open("proxy.json", "a") as file:
-          file.write("\n")
-          json.dump(json.loads(data.decode("UTF_8")), file)
-      else:
-        with open("proxy.json", "w") as file:
-          json.dump(json.loads(data.decode("UTF-8")), file)
+      try:
+        # Accept connections from new proxy nodes
+        conn, addr = s.accept()
+        s.settimeout(None)
+        data = b""
+        with conn:
+          if verbose: log(f"Proxy node connected from {addr[0]}:{addr[1]}")
+          # Loop through connections until we get the EOT_CHAR (end-of-transmission)
+          while True:
+            data += conn.recv(BUFFER_SIZE)
+            if data[-1] == EOT_CHAR[0]:
+              data = data[:-1]
+              break
+          
+        # Write/append rows of JSON to the broker's replica of proxy.json
+        if exists("proxy.json"):
+          with open("proxy.json", "a") as file:
+            file.write("\n")
+            json.dump(json.loads(data.decode("UTF_8")), file)
+        else:
+          with open("proxy.json", "w") as file:
+            json.dump(json.loads(data.decode("UTF-8")), file)
+      except s.timeout:
+        # Begin leader election if no new proxy node connections have been established in the timeout period
+        proxyleader_ID = -1
+        proxyleader_ip = None
+        proxyleader_port = None
+        
+        # Find proxy with the highest ID to be selected as to-be leader
+        with open("proxy.json", "r") as infile:
+          for line in infile:
+              dict = json.loads(line)
+              if dict['ID'] > proxyleader_ID:
+                proxyleader_ID = dict['ID']
+                proxyleader_ip = dict['IP']
+                proxyleader_port = dict['port']
+
+        # Update flag to mark highest-id proxy leader as leader -- not entirely sure if this is correct
+        with open("proxy.json", "r+") as infile:
+          for line in infile:
+            dict = json.loads(line)
+            if dict['ID'] == proxyleader_ID:
+              dict['is-leader'] = True
+
+        # Send election message with proxy.json file to new proxy leader
+        with open("proxy.json", "r") as infile:
+          dictionary = {
+            "election-message": True,
+            "proxy-list": json.loads(infile)
+          }
+          send_message(dictionary, proxyleader_ip, proxyleader_port)
+        
      
 #This function is used if we run python broker.py -s sub_port -p pub_port [-o port_offset -v]
 #and we enter in a different subscriber port value for the broker via the command line.
