@@ -55,6 +55,8 @@ def sign(message, key):
 
 #QUESTION: Why do we need to include clientIP and clientPort for message?
 def get_proxy_nodes():
+  global proxy_node_count
+
   # construct the request to be sent to the broker; NOTE: can set client port to be something else
   request = json.dumps({
     "getProxyNodes": True,
@@ -78,6 +80,7 @@ def get_proxy_nodes():
     # after receiving all of the JSON data, dump that JSON data into own proxy.json replica
     with open("proxy.json", "w") as file:
       file.write(data)
+  
 
 #ADDED Code
 #This function generates a pair of private and public keys and sends the publicKey as well as the
@@ -140,9 +143,10 @@ def send_message(message,topic):
     s.connect((broker_ip, broker_port))
 
     # Send message to the broker.
-    message = bytes(message, 'UTF-8')
+    # message = message.encode("UTF-8")
 
     #Is this return value a list or a dictionary?
+    print(proxy_node_count)
     random_proxy_node = random.randint(1, proxy_node_count)
 
     with open("proxy.json", "r") as file:
@@ -170,6 +174,8 @@ def send_message(message,topic):
       "Topic": topic,
       "Signature": signature
     }
+
+    final_message = json.dumps(final_message)
     
     s.sendall(final_message + EOT_CHAR)
 
