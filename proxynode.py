@@ -116,7 +116,10 @@ def decrypt(ciphertext, key):
     # encrypted_message = base64.b64encode(encrypt(message,proxy_public_key))
     # encrypted_message = encrypted_message.decode("UTF-8")
 
+    log("Ciphertext type before: " + str(type(ciphertext)))
+    ciphertext = ciphertext.encode("UTF-8")
     ciphertext = base64.decode(ciphertext)
+    log("Ciphertext type after: " + str(type(ciphertext)))
     cipher = PKCS1_OAEP.new(key)
     message = cipher.decrypt(ciphertext)
     #return message.decode()
