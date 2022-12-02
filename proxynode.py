@@ -253,15 +253,15 @@ def receiverthread():
           send_elected_messages(decoded_data['proxy-list'])
         
         # if the current proxy node is NOT the leader but gets the Elected message, store the proxy-list embedded in the message
-        if "Elected" in decoded_data and decoded_data["Elected"]: 
+        elif "Elected" in decoded_data and decoded_data["Elected"]: 
           store_child_proxy_nodes(decoded_data['proxy-list'])
           
         # If publisher has sent its public key for signing --> store the public key and send to other proxy nodes 
-        if "public-key" in decoded_data: 
+        elif "public-key" in decoded_data: 
           store_publisher_public_keys(decoded_data["ID"], decoded_data["public-key"])
 
         # if data is a published event message, check the receiving_IP + receiving_PORT in the messages
-        if 'Proxy-IP' in decoded_data and 'Proxy-Port' in decoded_data:
+        elif 'Proxy-IP' in decoded_data and 'Proxy-Port' in decoded_data:
           if 'Proxy-IP' in decoded_data['Proxy-IP'] == proxy_node_receiving_ip and decoded_data['Proxy-Port'] == proxy_node_receiving_port:
             decrypted_message = decrypt(decoded_data["Message"], proxy_privateKey)
 
