@@ -1,11 +1,13 @@
 import socket
 from time import sleep
 from sys import argv
-import rsa
 import logging
 import json
 import random
 from Crypto.PublicKey import RSA
+from Crypto.Cipher import AES, PKCS1_OAEP
+from Crypto.Hash import SHA1
+from Crypto.Signature import pkcs1_15
 
 #This is good, doesn't have to change.
 #Publisher id for differentiating publishers between one another. We can change these values
@@ -45,13 +47,18 @@ def log(message):
 #This function takes in a message and either the public or private key and encrypts the message
 #using the private or public key.
 def encrypt(message, key):
-  return rsa.encrypt(message.encode('ascii'), key)
+  cipher_rsa = PKCS1_OAEP.new(key)
+  ciphertext = cipher_rsa.encrypt(message)
+  return ciphertext
 
 #ADDED CODE
 #This is good, doesn't have to change.
 #This function takes in a message and a key and signs the message using SHA-1.
 def sign(message, key):
-  return rsa.sign(message.encode('ascii'), key, 'SHA-1')
+  newMessage = message.encode('UTF-8')
+  h = SHA1.new(newMessage)
+  signature = pkcs1_15.new(key).sign(h)
+  return signature
 
 #QUESTION: Why do we need to include clientIP and clientPort for message?
 def get_proxy_nodes():
@@ -152,6 +159,7 @@ def send_message(message,topic):
     with open("proxy.json", "r") as file:
       for index, line in enumerate(file):
         if index == random_proxy_node:
+          print("IN HERE")
           line = json.loads(line)
           # get the public key from there
           proxy_ip = line['IP']

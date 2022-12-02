@@ -7,6 +7,8 @@ import json
 import threading
 import os
 from Crypto.PublicKey import RSA
+from Crypto.Signature import pkcs1_15
+from Crypto.Hash import SHA1
 
 
 # keys for proxy node
@@ -106,7 +108,9 @@ def send_message_to_proxy(message, recipient_proxy_ip, recipient_proxy_port):
 #Added code that can decrypt messages using an associated private or public key (in this case public key).
 def decrypt(ciphertext, key):
     try:
-        return rsa.decrypt(ciphertext, key).decode('ascii')
+      cipher = PKCS1_OAEP.new(key)
+      message = cipher.decrypt(ciphertext)
+      return message
     except:
         return False
   
@@ -142,9 +146,10 @@ def send_message_to_subscribers(message, subscribers):
 
 # Added code that can verify message signatures according with SHA-1 signature
 def verify(message, signature, key):
-    try:
-        return rsa.verify(message.encode('ascii'), signature, key,) == 'SHA-1'
-    except:
+  h = SHA1.new(message)
+  try:
+      return pkcs1_15.new(key).verify(h, signature)
+  except:
         return False
 
 # Helper function called by receiverthread() that lets the proxy node store the publisher's public key for verification of signatures
