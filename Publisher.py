@@ -110,15 +110,15 @@ def generate_JSON_ID_PublicKey():
 
   #Turn exported private key into string.
   final_pub_publicKey = exported_pub_publicKey.decode('utf-8')
-  
 
   dictionary = {
     "ID": id,
     "public-key": final_pub_publicKey
-}
+  }
 
   data = json.dumps(dictionary)
 
+  log("ABOUT TO SEND PUBLISHER'S PUBLIC KEY")
   with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     # Setup socket and connect
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -129,9 +129,9 @@ def generate_JSON_ID_PublicKey():
     # Send message to the broker.
     message = bytes(data,'UTF-8')
     s.sendall(message + EOT_CHAR)
-
     # Wait for OK response
-    return s.recv(BUFFER_SIZE)
+    return s.recv(BUFFER_SIZE).decode()
+
 
 
 #Function to set up socket between publisher and broker, and then send
@@ -334,7 +334,7 @@ ret_val = handle_command_line_args()
 if ret_val != -1:
   log("Publisher process started")
   get_proxy_nodes()
-  generate_JSON_ID_PublicKey()
+  log("Response received after sending public key " + generate_JSON_ID_PublicKey())
   #handle_command_file()
   handle_cli_commands()
 else:
