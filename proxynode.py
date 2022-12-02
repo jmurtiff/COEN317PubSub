@@ -266,6 +266,7 @@ def receiverthread():
           if 'Proxy-IP' in decoded_data['Proxy-IP'] == proxy_node_receiving_ip and decoded_data['Proxy-Port'] == proxy_node_receiving_port:
             decrypted_message = decrypt(decoded_data["Message"], proxy_privateKey)
 
+            print("DECRYPTED MESSAGE")
             publisherPublicKey = get_public_key(decoded_data["Publisher-ID"])
             pub_publicKey = RSA.import_key(publisherPublicKey)
 
