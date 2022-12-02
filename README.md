@@ -32,7 +32,6 @@
 ## Publisher and Subscriber Commands + Command Files
 - Once the publishers and subscribers are created, they each have their own sets of commands. To see message traffic, subscribers' commands should go before publishers' commands go so they are ready to receive messages. After that, you can see how the subscribers subscribe/unsubscribe and receive messages while publishers are publishing messages
 - Publisher --> to publish messages to a given topic, use the following command format for each running publisher: `<wait time> pub #<topic> <message>`
-  - ** Important note: upon publishing a message for the first time, the command will be rejected. Simply re-enter the command for functionality to resume as intended. **
   - 1 pub #sports message from p1
   - 1 pub #testtopic message from p2
   - NOTE: the publishers should publish to topics that the subscribers are already subscribed to
