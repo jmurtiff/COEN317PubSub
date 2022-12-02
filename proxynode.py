@@ -108,6 +108,15 @@ def send_message_to_proxy(message, recipient_proxy_ip, recipient_proxy_port):
 def decrypt(ciphertext, key):
   try:
     #ciphertext = ciphertext.decode(UTF-8)
+    # signature = base64.b64encode(sign(message,privateKey))
+    # signature = signature.decode("UTF-8")
+
+    # proxy_public_key = RSA.import_key(proxy_public_key)
+    # #We need to encrypt using the public key of the proxy node, which we have to read from the JSON file itself.
+    # encrypted_message = base64.b64encode(encrypt(message,proxy_public_key))
+    # encrypted_message = encrypted_message.decode("UTF-8")
+
+    ciphertext = base64.decode(ciphertext)
     cipher = PKCS1_OAEP.new(key)
     message = cipher.decrypt(ciphertext)
     #return message.decode()
