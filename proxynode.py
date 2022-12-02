@@ -328,9 +328,6 @@ def handle_command_line_args():
         # i -= 1
     i += 2
 
-  print(id)
-  print(broker_ip)
-  print(broker_port)
   if not id or not broker_ip or not broker_port:
     print("Arguments missing")
     return -1
