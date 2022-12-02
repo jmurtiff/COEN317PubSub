@@ -262,10 +262,11 @@ def receiverthread():
         if decoded_data['Proxy-IP'] == proxy_node_receiving_ip and decoded_data['Proxy-Port'] == proxy_node_receiving_port:
           decrypted_message = decrypt(decoded_data["Message"], proxy_privateKey)
           publisherPublicKey = get_public_key(decoded_data["Publisher-ID"])
+          pub_publicKey = RSA.import_key(publisherPublicKey)
 
           # as long as the publisher's public key can be found, perform rest of verification/authentication before sending to subscribers
           if publisherPublicKey is not None:
-            verified = verify(decoded_data["Message"], decoded_data["Signature"], publisherPublicKey)
+            verified = verify(decoded_data["Message"], decoded_data["Signature"], pub_publicKey)
             # once decryption and verification is done
             if verified == "SHA-1" and decrypted_message:
               send_message_to_subscribers(decrypted_message, decoded_data["Subscribers"])
