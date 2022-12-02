@@ -269,19 +269,19 @@ def receiverthread():
             publisherPublicKey = get_public_key(decoded_data["Publisher-ID"])
             pub_publicKey = RSA.import_key(publisherPublicKey)
 
-          # as long as the publisher's public key can be found, perform rest of verification/authentication before sending to subscribers
-          if publisherPublicKey is not None:
-            verified = verify(decoded_data["Message"], decoded_data["Signature"], pub_publicKey)
-            # once decryption and verification is done
-            if verified == "SHA-1" and decrypted_message:
-              send_message_to_subscribers(decrypted_message, decoded_data["Subscribers"])
-          else:
-            # this proxy node must be the leader and is NOT the intended recipient, so send the message to other proxy node
-            response = send_message_to_proxy(data, decoded_data['Proxy-IP'], decoded_data['Proxy-Port'])
-
-            # resend the message if necessary 
-            while response != "OK":
+            # as long as the publisher's public key can be found, perform rest of verification/authentication before sending to subscribers
+            if publisherPublicKey is not None:
+              verified = verify(decoded_data["Message"], decoded_data["Signature"], pub_publicKey)
+              # once decryption and verification is done
+              if verified == "SHA-1" and decrypted_message:
+                send_message_to_subscribers(decrypted_message, decoded_data["Subscribers"])
+            else:
+              # this proxy node must be the leader and is NOT the intended recipient, so send the message to other proxy node
               response = send_message_to_proxy(data, decoded_data['Proxy-IP'], decoded_data['Proxy-Port'])
+
+              # resend the message if necessary 
+              while response != "OK":
+                response = send_message_to_proxy(data, decoded_data['Proxy-IP'], decoded_data['Proxy-Port'])
         else:
           pass
         conn.sendall(b"OK")   
