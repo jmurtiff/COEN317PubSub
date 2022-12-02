@@ -348,7 +348,7 @@ def proxythread():
             "proxy-list": infile.read()
           }
           send_message(dictionary, proxyleader_ip, proxyleader_port)
-     
+        break
 #This function is used if we run python broker.py -s sub_port -p pub_port [-o port_offset -v]
 #and we enter in a different subscriber port value for the broker via the command line.
 def handle_option_sub_port(arguments, i):
