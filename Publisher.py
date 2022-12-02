@@ -233,11 +233,11 @@ def handle_cli_commands():
   try:
     while True:
       log("Enter command:")
-      command = input()
+      command = input().split()
       while check_command(command):
         log("Invalid command")
         log("Use: <wait time> <pub> <topic> <message>")
-      command = input().split(" ")
+        command = input().split(" ")
       handle_command(command)
   except KeyboardInterrupt:
     return
