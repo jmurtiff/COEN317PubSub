@@ -4,7 +4,8 @@ from sys import argv
 import rsa
 import logging
 import json
-import random 
+import random
+from Crypto.PublicKey import RSA
 
 #This is good, doesn't have to change.
 #Publisher id for differentiating publishers between one another. We can change these values
@@ -38,13 +39,6 @@ BUFFER_SIZE = 1024
 #Log function, prints out broker + specific message
 def log(message):
   print("[PUBLISHER] " + message);
-
-#NOTE: Need to add RSA in publisher, create public and private keys and handle signing and encryption
-#Sends JSON information with publisher ID + public key to broker --> broker creates new JSON file with publisher public keys + ID
-def generateKeys():
-    (publicKey, privateKey) = rsa.newkeys(1024)
-    return publicKey,privateKey
-
 
 #ADDED CODE
 #This is good, doesn't have to change.
@@ -92,10 +86,25 @@ def get_proxy_nodes():
 #sent to it.
 def generate_JSON_ID_PublicKey():
   global publicKey, privateKey
-  publicKey, privateKey = generateKeys()
+
+  keypair = RSA.generate(2048)
+
+  #This is the public key in PublicKey form.
+  publicKey = keypair.publickey()
+
+  #This is the private key in PrivateKey form.
+  privateKey = keypair
+
+  #Export public key
+  exported_pub_publicKey = publicKey.export_key('PEM')
+
+  #Turn exported private key into string.
+  final_pub_publicKey = exported_pub_publicKey.decode('utf-8')
+  
+
   dictionary = {
     "ID": id,
-    "public-key": publicKey
+    "public-key": final_pub_publicKey
 }
 
   data = json.dumps(dictionary)
@@ -311,7 +320,7 @@ if ret_val != -1:
   log("Publisher process started")
   get_proxy_nodes()
   generate_JSON_ID_PublicKey()
-  handle_command_file()
+  #handle_command_file()
   handle_cli_commands()
 else:
   print("Use: python publisher.py -i ID -r pub_port -h broker_IP -p port [-f command_file -v]")
