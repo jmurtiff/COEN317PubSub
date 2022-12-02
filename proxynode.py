@@ -342,7 +342,7 @@ if ret_val != -1:
   except KeyboardInterrupt:
     exit(0)
 else:
-    print("Use: python3 proxynode.py -i proxy_ID -b broker_IP -bs broker_port -ip proxy_IP -p proxy_port")
+    print("Use: python3 proxynode.py -i proxy_ID -b broker_IP -br broker_port -ip proxy_IP -p proxy_port")
 
 #Need to add function to handle leader election for proxy nodes.
 #Bully algorithm based on IDs --> information that it needs for other proxy nodes is in JSON file 
