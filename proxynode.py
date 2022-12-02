@@ -120,7 +120,7 @@ def get_public_key(publisher_id):
   with open("publisher.json", "r") as file:
     for line in file:
       line = json.loads(line)
-      pub_id = line.keys()[0]
+      pub_id = list(line.keys())[0]
       if pub_id == publisher_id:
         return line[pub_id]
   # if no public key is found that means the message is malicious and to drop it
