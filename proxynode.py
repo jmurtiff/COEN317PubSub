@@ -263,6 +263,13 @@ def receiverthread():
         # if data is a published event message, check the receiving_IP + receiving_PORT in the messages
         elif 'Proxy-IP' in decoded_data and 'Proxy-Port' in decoded_data:
           print("ENTERED THIS STATEMENT")
+          print(decoded_data['Proxy-IP'])
+          print(type(decoded_data['Proxy-IP']))
+          print(decoded_data['Proxy-Port'])
+          print(type(decoded_data['Proxy-Port']))
+
+          print(proxy_node_receiving_ip, type(proxy_node_receiving_ip))
+          print(proxy_node_receiving_port, type(proxy_node_receiving_port))
           if 'Proxy-IP' in decoded_data['Proxy-IP'] == proxy_node_receiving_ip and decoded_data['Proxy-Port'] == proxy_node_receiving_port:
             decrypted_message = decrypt(decoded_data["Message"], proxy_privateKey)
 
@@ -281,6 +288,7 @@ def receiverthread():
                 print("SENDING MESSAGE TO SUBSCRIBER")
                 send_message_to_subscribers(decrypted_message, decoded_data["Subscribers"])
           else:
+            print("WHY DID YOU GO HERE?")
             # this proxy node must be the leader and is NOT the intended recipient, so send the message to other proxy node
             response = send_message_to_proxy(data, decoded_data['Proxy-IP'], decoded_data['Proxy-Port'])
 
