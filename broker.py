@@ -124,7 +124,7 @@ def send_message(message, ip, port):
 #through, goes through each socket connection, takes all data, and then sends it 
 #to the handle_pub_message() function.
 def pubthread():
-  log(f"Proxy thread is up at port {proxy_port}")
+  log(f"Publisher thread is up at port {pub_port}")
 
   while True:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -137,7 +137,6 @@ def pubthread():
 
       # Accept connections
       conn, addr = s.accept()
-      print(f"Publisher connected from {addr[0]}:{addr[1]}")
       data = b""
       with conn:
         if verbose: log(f"Publisher connected from {addr[0]}:{addr[1]}")
@@ -145,31 +144,44 @@ def pubthread():
         while True:
           data += conn.recv(BUFFER_SIZE)
           print("This is the data: " + data.decode())
-          if data[-1] == EOT_CHAR[0]:
-            data = data[:-1]
+          if len(data) < 1 or data[-1] == EOT_CHAR[0]:
+            data = data[:-1] # just in case any messages were sent with EOT
             break
 
         # Detect get_proxy_nodes header
+        print("DECODED DATA: " + data.decode())
         convertData = json.loads(data.decode())
-        try:
-          convertData['getProxyNodes']
-        except:
-          try: 
-            convertData['public-key']
-
-          except:
-            handle_pub_message(data)
-          
-          else:
-            #if not normal message 
-            handle_pub_ID_publickey(data)
-        else:
-          # Send proxy file to publisher if requested
-          print("SENDING HERE")
+        if 'getProxyNodes' in convertData:
+          # send the proxy.json file to publisher
           with open("proxy.json", "r") as infile:
             data = infile.read()
             conn.sendall(data.encode("UTF-8"))
             infile.close()
+        elif 'public-key' in convertData:
+          # pass the public key to the proxy node leader
+          handle_pub_ID_publickey(data)
+        else:
+          handle_pub_message(data)
+          # this is a normal message 
+        # try:
+        #   convertData['getProxyNodes']
+        # except:
+        #   try: 
+        #     convertData['public-key']
+
+        #   except:
+        #     handle_pub_message(data)
+          
+        #   else:
+        #     #if not normal message 
+        #     handle_pub_ID_publickey(data)
+        # else:
+        #   # Send proxy file to publisher if requested
+        #   print("SENDING HERE")
+        #   with open("proxy.json", "r") as infile:
+        #     data = infile.read()
+        #     conn.sendall(data.encode("UTF-8"))
+        #     infile.close()
 
 #Function that handles sending publisher messages that contain publisher ID's
 #and publisher public keys. 
@@ -177,10 +189,11 @@ def handle_pub_ID_publickey(data):
   with open("proxy.json", "r") as infile:
     for line in infile:
       dict = json.loads(line)
+      print("DICT: " + str(dict))
       if dict['is-leader'] == True:
         proxyleader_ip = dict['IP']
         proxyleader_port = dict['port']
-  send_message(data, proxyleader_ip, proxyleader_port)
+        send_message(data, proxyleader_ip, proxyleader_port)
   log(f"Data published to proxy leader: {data}")
 
 
