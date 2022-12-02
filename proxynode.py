@@ -6,6 +6,7 @@ import logging
 import json
 import threading
 import os
+from Crypto.PublicKey import RSA
 
 
 # keys for proxy node
@@ -44,13 +45,25 @@ def generate_JSON_Dictionary():
   global proxy_publicKey
   global proxy_privateKey
   #Generate one pair of private and public keys (let's make this the proxy's node's keys)
-  (proxy_publicKey, proxy_privateKey) = rsa.newkeys(1024)
+  keypair = RSA.generate(2048)
+
+  #This is the public key in PublicKey form.
+  proxy_publicKey = keypair.publickey()
+
+  #This is the private key in PrivateKey form.
+  proxy_privateKey = keypair
+
+  #Export public key
+  exported_proxy_publicKey = proxy_publicKey.export_key('PEM')
+
+  #Turn exported private key into string.
+  final_proxy_publicKey = exported_proxy_publicKey.decode('utf-8')
 
   dictionary = {
     "IP": proxy_node_receiving_ip,
     "port": proxy_node_receiving_port,
     "ID": id,
-    "public-key": proxy_publicKey,
+    "public-key": final_proxy_publicKey,
     "is-leader": False,
     "is-live": True
   }
