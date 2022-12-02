@@ -124,7 +124,7 @@ def send_message(message, ip, port):
 #through, goes through each socket connection, takes all data, and then sends it 
 #to the handle_pub_message() function.
 def pubthread():
-  log(f"Proxy thread is up at port {pub_port}")
+  log(f"Proxy thread is up at port {proxy_port}")
 
   while True:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
@@ -133,38 +133,43 @@ def pubthread():
       s.bind((host, pub_port))
       s.listen()
 
+      log("Broker listening on port " + str(pub_port))
+
       # Accept connections
       conn, addr = s.accept()
+      print(f"Publisher connected from {addr[0]}:{addr[1]}")
       data = b""
       with conn:
         if verbose: log(f"Publisher connected from {addr[0]}:{addr[1]}")
         # Loop through connections until we get the EOT_CHAR (end-of-transmission)
         while True:
           data += conn.recv(BUFFER_SIZE)
+          print("This is the data: " + data.decode())
           if data[-1] == EOT_CHAR[0]:
             data = data[:-1]
             break
-        # Send OK response
-        conn.sendall(b"OK")
 
-      # Detect get_proxy_nodes header
-      convertData = json.loads(data)
-      try:
-        convertData['getProxyNodes']
-      except:
-        try: 
-          convertData['public-key']
-
+        # Detect get_proxy_nodes header
+        convertData = json.loads(data.decode())
+        try:
+          convertData['getProxyNodes']
         except:
-          handle_pub_message(data)
-        
+          try: 
+            convertData['public-key']
+
+          except:
+            handle_pub_message(data)
+          
+          else:
+            #if not normal message 
+            handle_pub_ID_publickey(data)
         else:
-          #if not normal message 
-          handle_pub_ID_publickey(data)
-      else:
-        # Send proxy file to publisher if requested
-        with open("proxy.json", "r") as infile:
-          conn.sendall(infile.read())
+          # Send proxy file to publisher if requested
+          print("SENDING HERE")
+          with open("proxy.json", "r") as infile:
+            data = infile.read()
+            conn.sendall(data.encode("UTF-8"))
+            infile.close()
 
 #Function that handles sending publisher messages that contain publisher ID's
 #and publisher public keys. 
