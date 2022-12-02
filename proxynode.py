@@ -279,13 +279,13 @@ def receiverthread():
               if verified == "SHA-1" and decrypted_message:
                 print("SENDING MESSAGE TO SUBSCRIBER")
                 send_message_to_subscribers(decrypted_message, decoded_data["Subscribers"])
-            else:
-              # this proxy node must be the leader and is NOT the intended recipient, so send the message to other proxy node
-              response = send_message_to_proxy(data, decoded_data['Proxy-IP'], decoded_data['Proxy-Port'])
+          else:
+            # this proxy node must be the leader and is NOT the intended recipient, so send the message to other proxy node
+            response = send_message_to_proxy(data, decoded_data['Proxy-IP'], decoded_data['Proxy-Port'])
 
-              # resend the message if necessary 
-              while response != "OK":
-                response = send_message_to_proxy(data, decoded_data['Proxy-IP'], decoded_data['Proxy-Port'])
+            # resend the message if necessary 
+            while response != "OK":
+              response = send_message_to_proxy(data, decoded_data['Proxy-IP'], decoded_data['Proxy-Port'])
         else:
           pass
         conn.sendall(b"OK")   
