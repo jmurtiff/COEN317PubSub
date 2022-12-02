@@ -148,7 +148,7 @@ def send_message_to_subscribers(message, subscribers):
 
 # Added code that can verify message signatures according with SHA-1 signature
 def verify(message, signature, key):
-  message = message.decode('UTF-8')
+  # message = message.decode('UTF-8')
   h = SHA1.new(message)
   try:
     return pkcs1_15.new(key).verify(h, signature)
@@ -274,22 +274,21 @@ def receiverthread():
           if decoded_data['Proxy-IP'] == proxy_node_receiving_ip and decoded_data['Proxy-Port'] == proxy_node_receiving_port:
             decrypted_message = decrypt(decoded_data["Payload"], proxy_privateKey)
 
-            print("DECRYPTED MESSAGE")
+            log("DECRYPTED MESSAGE")
             publisherPublicKey = get_public_key(decoded_data["Publisher-ID"])
             pub_publicKey = RSA.import_key(publisherPublicKey)
-
-            print(pub_publicKey)
+            log("The decrypted message: " + decrypted_message)
 
             # as long as the publisher's public key can be found, perform rest of verification/authentication before sending to subscribers
             if publisherPublicKey is not None:
-              print("DECRYPTING MESSAGE")
+              print("VERIFYING MESSAGE")
               verified = verify(decoded_data["Payload"], decoded_data["Signature"], pub_publicKey)
               # once decryption and verification is done
               if verified == "SHA-1" and decrypted_message:
-                print("SENDING MESSAGE TO SUBSCRIBER")
+                log("VERIFIED MESSAGE, SENDING MESSAGE TO SUBSCRIBER")
                 send_message_to_subscribers(decrypted_message, decoded_data["Subscribers"])
           else:
-            print("WHY DID YOU GO HERE?")
+            log("SENDING MESSAGE TO OTHER PROXY NODE TO BE DECRYPTED")
             # this proxy node must be the leader and is NOT the intended recipient, so send the message to other proxy node
             response = send_message_to_proxy(data, decoded_data['Proxy-IP'], decoded_data['Proxy-Port'])
 
