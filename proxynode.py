@@ -270,7 +270,7 @@ def receiverthread():
 
           print(proxy_node_receiving_ip, type(proxy_node_receiving_ip))
           print(proxy_node_receiving_port, type(proxy_node_receiving_port))
-          if 'Proxy-IP' in decoded_data['Proxy-IP'] == proxy_node_receiving_ip and decoded_data['Proxy-Port'] == proxy_node_receiving_port:
+          if decoded_data['Proxy-IP'] == proxy_node_receiving_ip and decoded_data['Proxy-Port'] == proxy_node_receiving_port:
             decrypted_message = decrypt(decoded_data["Message"], proxy_privateKey)
 
             print("DECRYPTED MESSAGE")
