@@ -72,17 +72,13 @@ def get_proxy_nodes():
   with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.connect((broker_ip, broker_port))
     request = request.encode("UTF-8")
-    s.sendall(request)
+    s.sendall(request + EOT_CHAR)
     
     data = b""
     # because we've connected to the broker, we can read in the broker's reply (JSON file contents)
-    while True:
-      data += s.recv(BUFFER_SIZE)
-      # no more data to send ==> the socket connection will close 
-      if len(data) < 1:
-        break
-    
+    data = s.recv(BUFFER_SIZE)
     data = data.decode("UTF-8")
+    print("Data received: " + data)
     proxy_node_count = data.count("{") # the number of '{' indicates how many rows of JSON there are
 
     # after receiving all of the JSON data, dump that JSON data into own proxy.json replica
@@ -94,7 +90,7 @@ def get_proxy_nodes():
 #publisher's ID to the broker to generate a JSON file that can be used when we send messages to
 #the broker and to know which publicKey we should use when the proxy node has to verify the message 
 #sent to it.
-def generate_JSON_ID_PublicKey(message):
+def generate_JSON_ID_PublicKey():
   global publicKey, privateKey
   publicKey, privateKey = generateKeys()
   dictionary = {
