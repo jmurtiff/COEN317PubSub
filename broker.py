@@ -6,7 +6,7 @@ import json
 from os.path import exists
 
 #IP address of broker.
-host = "127.0.0.1"
+host = "192.168.137.11"
 
 #Port that listens for messages from publishers (publisher --> broker)
 pub_port = None
@@ -85,6 +85,8 @@ def handle_pub_message(data):
     # when proxy node gets this information:
     # for sub in subscribers_to_send_to.keys():
     #     send(decrypted message)
+    print(subscriptions)
+    sub_count = 0
     for sub in subscriptions:
       if sub['topic'] == topic:
         sub_count += 1
@@ -111,7 +113,7 @@ def send_message(message, ip, port):
     # Setup socket and connect
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     #This is binding the port from proxy to broker.
-    s.bind((ip, port))
+    #s.bind((ip, port))
 
     #Connect to the target's port and IP address
     connected = False
@@ -124,8 +126,12 @@ def send_message(message, ip, port):
         sleep(30)
 
     # Send message
-    message = bytes(message, 'UTF-8')
-    s.sendall(message + EOT_CHAR)
+    if(type(message) is dict):
+      message = json.dumps(message)
+    else:
+      message = bytes(message, 'UTF-8')
+    
+    s.sendall(message.encode() + EOT_CHAR)
 
     # Wait for OK response
     # return s.recv(BUFFER_SIZE).decode()
@@ -325,10 +331,15 @@ def proxythread():
             if dict['ID'] == proxyleader_ID:
               newData = json.loads(data[i])
               newData['is-leader'] = True
-              data[i] = json.dump(newData)
+              data[i] = newData
               break
-          infile.seek(0)  
-          json.dump(data, infile)
+          infile.seek(0)
+          for line in data:
+            line = json.loads(line)
+            json.dump(line, infile)
+          #infile.seek(0)  
+          #json.dump(data, infile)
+          #print(data)
           infile.truncate()
 
           # Send election message with proxy.json file to new proxy leader
