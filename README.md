@@ -4,7 +4,7 @@
 - As part of our COEN 317: Distributed Systems final project, we aim to address critical security concerns in the publish subscribe messaging architecture. This project implements a variation of a publish-subscribe system that utilizes RSA encryption and digital signatures within the publisher layer, and a scalable security layer composed of proxy nodes to distribute security workloads away from the message broker and subscriber. All functionality is coded in Python.
 
 ## Requirements 
-- You should have at least Python 3.8+ to ensure that the most recent libraries can be installed without an issue 
+- You should have at least Python 3.8+ to ensure that the most recent libraries can be installed without an issue. 
 
 ## Installation 
 - To create your python virtual environment, use the command `python3 venv -m <environment name>`
@@ -12,21 +12,21 @@
 
 ## Configuration/Runtime
 - To run this publish-subscribe system, there is a general order in which to instantiate the entities: broker --> proxy node --> subscriber --> publisher 
-- For simplicity, all entities will be run on the same machine locally. For each command that is run, you will want to have a separate terminal window open. For starters, you may run 1 broker, 2 publishers, 3 proxy nodes, and 4 subscribers. You may increase the number of any of the entities except the broker
+- For functionality to work as intended, the broker MUST be run on a separate machine while the other files can be run locally on another machine. For each command that is run, you will want to have a separate terminal window open. For starters, you may run 1 broker, 2 publishers, 3 proxy nodes, and 4 subscribers. You may increase the number of any of the entities except the broker.
 - To run the broker, you may use the following command:
   - python3 broker.py -s 8001 -p 8000 -pr 8002 -o 1 -v
 - To run the proxy nodes, you may run any number of the following commands. However, for each proxy node, change the port AND identifier used to avoid port/identifier collision (-p): 
-  - python3 proxynode.py -i 1 -b 127.0.0.1 -br 8002 -ip 127.0.0.1 -p 9000
-  - python3 proxynode.py -i 2 -b 127.0.0.1 -br 8002 -ip 127.0.0.1 -p 9001
+  - python3 proxynode.py -i 1 -b {broker-ip} -br 8002 -ip 127.0.0.1 -p 9000
+  - python3 proxynode.py -i 2 -b {broker-ip} -br 8002 -ip 127.0.0.1 -p 9001
   - and so forth...
 - To run the subscribers, you may run any number of the following commands. However, for each subscriber node, 
-  - python3 subscriber.py -i s1 -r 7000 -h 127.0.0.1 -p 8002 -o 1 -v
-  - python3 subscriber.py -i s2 -r 7002 -h 127.0.0.1 -p 8002 -o 1 -v
-  - python3 subscriber.py -i s3 -r 7004 -h 127.0.0.1 -p 8002 -o 1 -v
+  - python3 subscriber.py -i s1 -r 7000 -h {broker-ip} -p 8002 -o 1 -v
+  - python3 subscriber.py -i s2 -r 7002 -h {broker-ip} -p 8002 -o 1 -v
+  - python3 subscriber.py -i s3 -r 7004 -h {broker-ip} -p 8002 -o 1 -v
   - and so forth...
 - To run the publishers, you may use the following command. Similar to the proxy nodes, use different port numbers AND identifiers to avoid port/identifier collisions
-  - python3 publisher.py -r 8010 -i p1 -h 127.0.0.1 -p 8000 -v
-  - python3 publisher.py -r 8010 -i p2 -h 127.0.0.1 -p 8000 -v
+  - python3 publisher.py -r 8010 -i p1 -h {broker-ip} -p 8000 -v
+  - python3 publisher.py -r 8010 -i p2 -h {broker-ip} -p 8000 -v
   - and so forth...
 
 ## Publisher and Subscriber Commands + Command Files
