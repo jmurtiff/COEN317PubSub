@@ -8,7 +8,7 @@ import os
 from Crypto.PublicKey import RSA
 from Crypto.Signature import pkcs1_15
 from Crypto.Hash import SHA1
-
+import base64
 
 # keys for proxy node
 proxy_publicKey = None
