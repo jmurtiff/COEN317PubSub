@@ -224,7 +224,7 @@ def handle_cli_commands():
         log("Use: <wait time> <pub> <topic> <message>")
         command = input().split(" ")
       handle_command(command)
-  except:
+  except KeyboardInterrupt:
     return
 
 #This is good, doesn't have to change.
