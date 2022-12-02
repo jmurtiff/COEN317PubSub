@@ -117,11 +117,11 @@ def decrypt(ciphertext, key):
     # encrypted_message = encrypted_message.decode("UTF-8")
 
     log("Ciphertext type before: " + str(type(ciphertext)))
-    ciphertext = ciphertext.encode("UTF-8")
-    ciphertext = base64.decode(ciphertext)
+    ciphertext = bytes(ciphertext)
     log("Ciphertext type after: " + str(type(ciphertext)))
     cipher = PKCS1_OAEP.new(key)
     message = cipher.decrypt(ciphertext)
+    log("DECRYPTED MESSAGE: " + str(message))
     #return message.decode()
     return message
   except:
@@ -275,21 +275,18 @@ def receiverthread():
 
         # if data is a published event message, check the receiving_IP + receiving_PORT in the messages
         elif 'Proxy-IP' in decoded_data and 'Proxy-Port' in decoded_data:
-          print("ENTERED THIS STATEMENT")
-          print(decoded_data['Proxy-IP'])
-          print(type(decoded_data['Proxy-IP']))
-          print(decoded_data['Proxy-Port'])
-          print(type(decoded_data['Proxy-Port']))
+          # print("ENTERED THIS STATEMENT")
+          # print(decoded_data['Proxy-IP'])
+          # print(type(decoded_data['Proxy-IP']))
+          # print(decoded_data['Proxy-Port'])
+          # print(type(decoded_data['Proxy-Port']))
 
           print(proxy_node_receiving_ip, type(proxy_node_receiving_ip))
           print(proxy_node_receiving_port, type(proxy_node_receiving_port))
           if decoded_data['Proxy-IP'] == proxy_node_receiving_ip and decoded_data['Proxy-Port'] == proxy_node_receiving_port:
             decrypted_message = decrypt(decoded_data["Payload"], proxy_privateKey)
-
-            log("DECRYPTED MESSAGE")
             publisherPublicKey = get_public_key(decoded_data["Publisher-ID"])
             pub_publicKey = RSA.import_key(publisherPublicKey)
-            log("The decrypted message: " + decrypted_message)
 
             # as long as the publisher's public key can be found, perform rest of verification/authentication before sending to subscribers
             if publisherPublicKey is not None:
