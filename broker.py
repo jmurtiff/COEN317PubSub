@@ -152,12 +152,32 @@ def pubthread():
       try:
         convertData['getProxyNodes']
       except:
-        # If not a request for proxy nodes file, pass message to proxy nodes
-        handle_pub_message(data)
+        try: 
+          convertData['public-key']
+
+        except:
+          handle_pub_message(data)
+        
+        else:
+          #if not normal message 
+          handle_pub_ID_publickey(data)
       else:
         # Send proxy file to publisher if requested
         with open("proxy.json", "r") as infile:
           conn.sendall(infile.read())
+
+#Function that handles sending publisher messages that contain publisher ID's
+#and publisher public keys. 
+def handle_pub_ID_publickey(data):
+  with open("proxy.json", "r") as infile:
+    for line in infile:
+      dict = json.loads(line)
+      if dict['is-leader'] == True:
+        proxyleader_ip = dict['IP']
+        proxyleader_port = dict['port']
+  send_message(data, proxyleader_ip, proxyleader_port)
+  log(f"Data published to proxy leader: {data}")
+
 
 #Add to the subscriptions array with each subscriber based on their id, topic, ip, and port
 #Maybe we can have this list as part of each proxy node to keep track of relevant information for
