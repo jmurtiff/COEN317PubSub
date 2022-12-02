@@ -48,11 +48,8 @@ def log(message):
 #This function takes in a message and either the public or private key and encrypts the message
 #using the private or public key.
 def encrypt(message, key):
-  #newMessage = message.encode('UTF-8')
-  print("TEST")
-  print(type( message))  
   cipher_rsa = PKCS1_OAEP.new(key)
-  ciphertext = cipher_rsa.encrypt(message)
+  ciphertext = cipher_rsa.encrypt(message.encode())
   return ciphertext
 
 #ADDED CODE
@@ -85,7 +82,6 @@ def get_proxy_nodes():
     # because we've connected to the broker, we can read in the broker's reply (JSON file contents)
     data = s.recv(BUFFER_SIZE)
     data = data.decode("UTF-8")
-    print("Data received: " + data)
     proxy_node_count = data.count("{") # the number of '{' indicates how many rows of JSON there are
 
     # after receiving all of the JSON data, dump that JSON data into own proxy.json replica
@@ -157,7 +153,6 @@ def send_message(message,topic):
     # message = message.encode("UTF-8")
 
     #Is this return value a list or a dictionary?
-    print(proxy_node_count)
     random_proxy_node = random.randint(1, proxy_node_count) - 1
 
     with open("proxy.json", "r") as file:
@@ -170,20 +165,18 @@ def send_message(message,topic):
           proxy_public_key = line['public-key']
 
     #We need to sign using the private key of the publisher.
-    signature = sign(message,privateKey)
-    
-    exported_pub_publicKey = RSA.import_key(proxy_public_key)
+    signature = base64.b64encode(sign(message,privateKey))
+    signature = signature.decode("UTF-8")
 
+    proxy_public_key = RSA.import_key(proxy_public_key)
     #We need to encrypt using the public key of the proxy node, which we have to read from the JSON file itself.
-    encrypted_message = encrypt(message,exported_pub_publicKey)
-
-    encoded_message = base64.b64encode(encrypted_message)  # b'ZGF0YSB0byBiZSBlbmNvZGVk' (notice the "b")
-    #data['bytes'] = encoded.decode('ascii')  
+    encrypted_message = base64.b64encode(encrypt(message,proxy_public_key))
+    encrypted_message = encrypted_message.decode("UTF-8")
 
     #Create a partially encrypted message that contains relevant information as well as the message the 
     #publisher creates.
     final_message = {
-      "Payload": encoded_message.decode('ascii'),
+      "Payload": encrypted_message,
       "Publisher-ID": id,
       "Proxy-IP": proxy_ip,
       "Proxy-Port": proxy_port,
@@ -192,8 +185,8 @@ def send_message(message,topic):
     }
 
     final_message = json.dumps(final_message)
-    
-    s.sendall(final_message + EOT_CHAR)
+  
+    s.sendall(final_message.encode() + EOT_CHAR)
 
     # Wait for OK response
     return s.recv(BUFFER_SIZE)
