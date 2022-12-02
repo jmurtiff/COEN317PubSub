@@ -14,6 +14,10 @@ pub_port = None
 #Port that listens for messages from proxy nodes (proxy node --> broker)
 proxy_port = None
 
+#Global variable for proxy_leader ip
+proxyleader_ip = None
+proxyleader_port = None
+
 #Port that listens for messages from subscribers (subscriber --> broker)
 #We need this two-way communication if we want the subscribers to easily subscribe or unsubscribe from 
 #a given topic.
@@ -46,6 +50,13 @@ def log(message):
 #to know the topic and other elements, so in this case we may have to find a way to allow the topic
 #of a message to be transmitted separately so we can send to the correct proxy node.
 def handle_pub_message(data):
+  global proxyleader_ip
+  global proxyleader_port
+  
+  # if proxyleader hasn't been set, then we have to block any incoming requests until it is done 
+  while proxyleader_ip is None or proxyleader_port is None:
+    pass
+
   #Find ip and port of leader proxy node, from proxy.json
   with open("proxy.json", "r") as infile:
     for line in infile:
@@ -162,7 +173,7 @@ def pubthread():
           handle_pub_ID_publickey(data)
         else:
           print("PUBLISHING MESSAGE HERE")
-          handle_pub_message(data)
+          handle_pub_message(convertData)
           # this is a normal message 
         # try:
         #   convertData['getProxyNodes']
@@ -187,6 +198,9 @@ def pubthread():
 #Function that handles sending publisher messages that contain publisher ID's
 #and publisher public keys. 
 def handle_pub_ID_publickey(data):
+  global proxyleader_ip
+  global proxyleader_port
+
   with open("proxy.json", "r") as infile:
     for line in infile:
       dict = json.loads(line)
@@ -255,13 +269,16 @@ def subthread():
 
 #Handles incoming proxy node messages that are sending JSON information
 def proxythread():
+  global proxyleader_ip
+  global proxyleader_port
+  
   while True:
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
       # Setup socket and listen for connections, set a timeout to detect when no new proxy nodes are being added
       s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
       s.bind((host, proxy_port))
       s.listen()
-      s.settimeout(300)
+      s.settimeout(15)
 
       try:
         # Accept connections from new proxy nodes
@@ -285,7 +302,7 @@ def proxythread():
         else:
           with open("proxy.json", "w") as file:
             json.dump(json.loads(data.decode("UTF-8")), file)
-      except s.timeout:
+      except socket.timeout:
         # Begin leader election if no new proxy node connections have been established in the timeout period
         proxyleader_ID = -1
         proxyleader_ip = None
