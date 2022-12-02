@@ -128,11 +128,10 @@ def send_message(message, ip, port):
     # Send message
     if(type(message) is dict):
       message = json.dumps(message)
+      s.sendall(message.encode() + EOT_CHAR)
     else:
-      message = bytes(message, 'UTF-8')
+      s.sendall(message + EOT_CHAR)
     
-    s.sendall(message.encode() + EOT_CHAR)
-
     # Wait for OK response
     # return s.recv(BUFFER_SIZE).decode()
 
