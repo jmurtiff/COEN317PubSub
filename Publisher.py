@@ -74,16 +74,19 @@ def get_proxy_nodes():
   with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.connect((broker_ip, broker_port))
     request = request.encode("UTF-8")
-    s.sendall(request)
+    s.sendall(request + EOT_CHAR)
     
     data = b""
     # because we've connected to the broker, we can read in the broker's reply (JSON file contents)
-    while True:
-      data += s.recv(BUFFER_SIZE)
-      # no more data to send ==> the socket connection will close 
-      if len(data) < 1:
-        break
-    
+    # while True:
+    #   print("STUCK HERE")
+    #   data += s.recv(BUFFER_SIZE)
+    #   # no more data to send ==> the socket connection will close 
+    #   if len(data) < 1:
+    #     print("I BREAK OUT HERE")
+    #     break
+    data = s.recv(BUFFER_SIZE)
+    print(data)
     data = data.decode("UTF-8")
     proxy_node_count = data.count("{") # the number of '{' indicates how many rows of JSON there are
 
@@ -276,5 +279,6 @@ if ret_val != -1:
 
   handle_command_file()
   handle_cli_commands()
+  print("HERE")
 else:
   print("Use: python publisher.py -i ID -r pub_port -h broker_IP -p port [-f command_file -v]")
