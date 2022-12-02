@@ -47,6 +47,7 @@ def log(message):
 #This function takes in a message and either the public or private key and encrypts the message
 #using the private or public key.
 def encrypt(message, key):
+  #newMessage = message.encode('UTF-8')
   cipher_rsa = PKCS1_OAEP.new(key)
   ciphertext = cipher_rsa.encrypt(message)
   return ciphertext
@@ -154,12 +155,11 @@ def send_message(message,topic):
 
     #Is this return value a list or a dictionary?
     print(proxy_node_count)
-    random_proxy_node = random.randint(1, proxy_node_count)
+    random_proxy_node = random.randint(1, proxy_node_count) - 1
 
     with open("proxy.json", "r") as file:
       for index, line in enumerate(file):
         if index == random_proxy_node:
-          print("IN HERE")
           line = json.loads(line)
           # get the public key from there
           proxy_ip = line['IP']

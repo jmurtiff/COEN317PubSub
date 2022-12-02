@@ -1,7 +1,6 @@
 import socket
 from time import sleep
 from sys import argv
-import rsa
 import logging
 import json
 import threading
@@ -107,12 +106,13 @@ def send_message_to_proxy(message, recipient_proxy_ip, recipient_proxy_port):
 
 #Added code that can decrypt messages using an associated private or public key (in this case public key).
 def decrypt(ciphertext, key):
-    try:
-      cipher = PKCS1_OAEP.new(key)
-      message = cipher.decrypt(ciphertext)
-      return message
-    except:
-        return False
+  try:
+    #ciphertext = ciphertext.decode(UTF-8)
+    cipher = PKCS1_OAEP.new(key)
+    message = cipher.decrypt(ciphertext)
+    return message
+  except:
+    return False
   
 # when verifying the identity of the publisher of the message, get the publisher's public key given an ID
 def get_public_key(publisher_id):
@@ -146,11 +146,12 @@ def send_message_to_subscribers(message, subscribers):
 
 # Added code that can verify message signatures according with SHA-1 signature
 def verify(message, signature, key):
+  message = message.decode('UTF-8')
   h = SHA1.new(message)
   try:
-      return pkcs1_15.new(key).verify(h, signature)
+    return pkcs1_15.new(key).verify(h, signature)
   except:
-        return False
+    return False
 
 # Helper function called by receiverthread() that lets the proxy node store the publisher's public key for verification of signatures
 # Format of publisher.json:
