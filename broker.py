@@ -161,6 +161,7 @@ def pubthread():
           # pass the public key to the proxy node leader
           handle_pub_ID_publickey(data)
         else:
+          print("PUBLISHING MESSAGE HERE")
           handle_pub_message(data)
           # this is a normal message 
         # try:
