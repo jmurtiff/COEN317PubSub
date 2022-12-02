@@ -291,7 +291,7 @@ def handle_broker_ip(arguments, i):
     broker_ip = arguments[i+1]
   except:
     print("Invalid broker IP")
-    return - 1
+    return -1
   return 1 
 
 def handle_broker_port(arguments, i):
@@ -300,12 +300,12 @@ def handle_broker_port(arguments, i):
     broker_port = int(arguments[i+1])
   except:
     print("Invalid broker port")
-    return - 1
+    return -1
   return 1 
 
 def handle_command_line_args():
   options = {
-    "i": handle_proxy_id,
+    "-i": handle_proxy_id,
     "-ip": handle_option_proxy_ip,
     "-p": handle_option_proxy_port,
     "-b": handle_broker_ip,
@@ -324,9 +324,13 @@ def handle_command_line_args():
       if ret_val == -1:
         return -1
       elif ret_val == 1:
-        i -= 1
+        pass
+        # i -= 1
     i += 2
 
+  print(id)
+  print(broker_ip)
+  print(broker_port)
   if not id or not broker_ip or not broker_port:
     print("Arguments missing")
     return -1
