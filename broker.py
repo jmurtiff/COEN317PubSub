@@ -326,20 +326,14 @@ def proxythread():
         # Update flag to mark highest-id proxy leader as leader
         with open("proxy.json", "r+") as infile:
           data = infile.readlines()
-          for i, entry in enumerate(infile):
-            dict = json.loads(entry)
+          for i in range(len(data)):
+            dict = json.loads(data[i])
             if dict['ID'] == proxyleader_ID:
-              newData = json.loads(data[i])
-              newData['is-leader'] = True
-              data[i] = newData
-              break
+                dict['is-leader'] = True
+                data[i] = dict
           infile.seek(0)
           for line in data:
-            line = json.loads(line)
             json.dump(line, infile)
-          #infile.seek(0)  
-          #json.dump(data, infile)
-          #print(data)
           infile.truncate()
 
           # Send election message with proxy.json file to new proxy leader
