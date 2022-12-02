@@ -8,6 +8,7 @@ from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES, PKCS1_OAEP
 from Crypto.Hash import SHA1
 from Crypto.Signature import pkcs1_15
+import base64
 
 #This is good, doesn't have to change.
 #Publisher id for differentiating publishers between one another. We can change these values
@@ -48,6 +49,8 @@ def log(message):
 #using the private or public key.
 def encrypt(message, key):
   #newMessage = message.encode('UTF-8')
+  print("TEST")
+  print(type( message))  
   cipher_rsa = PKCS1_OAEP.new(key)
   ciphertext = cipher_rsa.encrypt(message)
   return ciphertext
@@ -174,10 +177,13 @@ def send_message(message,topic):
     #We need to encrypt using the public key of the proxy node, which we have to read from the JSON file itself.
     encrypted_message = encrypt(message,exported_pub_publicKey)
 
+    encoded_message = base64.b64encode(encrypted_message)  # b'ZGF0YSB0byBiZSBlbmNvZGVk' (notice the "b")
+    #data['bytes'] = encoded.decode('ascii')  
+
     #Create a partially encrypted message that contains relevant information as well as the message the 
     #publisher creates.
     final_message = {
-      "Payload": encrypted_message,
+      "Payload": encoded_message.decode('ascii'),
       "Publisher-ID": id,
       "Proxy-IP": proxy_ip,
       "Proxy-Port": proxy_port,

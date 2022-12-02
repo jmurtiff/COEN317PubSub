@@ -110,6 +110,7 @@ def decrypt(ciphertext, key):
     #ciphertext = ciphertext.decode(UTF-8)
     cipher = PKCS1_OAEP.new(key)
     message = cipher.decrypt(ciphertext)
+    #return message.decode()
     return message
   except:
     return False
@@ -261,6 +262,8 @@ def receiverthread():
         # if data is a published event message, check the receiving_IP + receiving_PORT in the messages
         if decoded_data['Proxy-IP'] == proxy_node_receiving_ip and decoded_data['Proxy-Port'] == proxy_node_receiving_port:
           decrypted_message = decrypt(decoded_data["Message"], proxy_privateKey)
+
+
           publisherPublicKey = get_public_key(decoded_data["Publisher-ID"])
           pub_publicKey = RSA.import_key(publisherPublicKey)
 
