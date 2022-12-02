@@ -160,25 +160,25 @@ def pubthread():
         # Loop through connections until we get the EOT_CHAR (end-of-transmission)
         while True:
           data += conn.recv(BUFFER_SIZE)
-          print("This is the data: " + data.decode())
           if len(data) < 1 or data[-1] == EOT_CHAR[0]:
             data = data[:-1] # just in case any messages were sent with EOT
             break
 
         # Detect get_proxy_nodes header
-        print("DECODED DATA: " + data.decode())
         convertData = json.loads(data.decode())
         if 'getProxyNodes' in convertData:
+          log("HANDLING STORING PROXY NODES")
           # send the proxy.json file to publisher
           with open("proxy.json", "r") as infile:
             data = infile.read()
             conn.sendall(data.encode("UTF-8"))
             infile.close()
         elif 'public-key' in convertData:
+          log("HANDLING PUBLISHER'S PUBLIC KEY")
           # pass the public key to the proxy node leader
           handle_pub_ID_publickey(data)
         else:
-          print("PUBLISHING MESSAGE HERE")
+          log("HANDLING PUBLISH MESSAGE")
           handle_pub_message(convertData)
           # this is a normal message 
         # try:
