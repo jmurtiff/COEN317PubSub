@@ -23,7 +23,7 @@ def send_message(message):
   with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     # Setup socket and connect
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.bind((client_ip, client_port))
+    #s.bind((client_ip, client_port))
     connected = False
     while not connected:
       try:

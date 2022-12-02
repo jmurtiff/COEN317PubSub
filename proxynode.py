@@ -18,7 +18,7 @@ proxy_privateKey = None
 id = None
 
 #This is the ip address of the broker that is messages to the proxy node, this is set statically.
-broker_ip = "127.0.0.1"
+broker_ip = "192.168.137.11"
 
 #Port that sends messages to brokers (proxy node --> broker). We use this to send JSON information to the broker.
 # NOTE: This port has to match the "proxy_port" variable in broker.py
@@ -245,6 +245,7 @@ def receiverthread():
             break
             
         decoded_data = json.loads(data.decode("UTF-8"))
+        print(decoded_data)
 
         # check if leader election has occurred, the new leader sends elected messages to other proxy nodes, and store information about all proxy nodes 
         if "election-message" in decoded_data and decoded_data["election-message"]:
@@ -260,12 +261,13 @@ def receiverthread():
           store_publisher_public_keys(decoded_data["ID"], decoded_data["public-key"])
 
         # if data is a published event message, check the receiving_IP + receiving_PORT in the messages
-        if decoded_data['Proxy-IP'] == proxy_node_receiving_ip and decoded_data['Proxy-Port'] == proxy_node_receiving_port:
-          decrypted_message = decrypt(decoded_data["Message"], proxy_privateKey)
+        if 'Proxy-IP' in decoded_data and 'Proxy-Port' in decoded_data:
+          if 'Proxy-IP' in decoded_data['Proxy-IP'] == proxy_node_receiving_ip and decoded_data['Proxy-Port'] == proxy_node_receiving_port:
+            decrypted_message = decrypt(decoded_data["Message"], proxy_privateKey)
 
 
-          publisherPublicKey = get_public_key(decoded_data["Publisher-ID"])
-          pub_publicKey = RSA.import_key(publisherPublicKey)
+            publisherPublicKey = get_public_key(decoded_data["Publisher-ID"])
+            pub_publicKey = RSA.import_key(publisherPublicKey)
 
           # as long as the publisher's public key can be found, perform rest of verification/authentication before sending to subscribers
           if publisherPublicKey is not None:
@@ -273,13 +275,13 @@ def receiverthread():
             # once decryption and verification is done
             if verified == "SHA-1" and decrypted_message:
               send_message_to_subscribers(decrypted_message, decoded_data["Subscribers"])
-        else:
-          # this proxy node must be the leader and is NOT the intended recipient, so send the message to other proxy node
-          response = send_message_to_proxy(data, decoded_data['Proxy-IP'], decoded_data['Proxy-Port'])
-
-          # resend the message if necessary 
-          while response != "OK":
+          else:
+            # this proxy node must be the leader and is NOT the intended recipient, so send the message to other proxy node
             response = send_message_to_proxy(data, decoded_data['Proxy-IP'], decoded_data['Proxy-Port'])
+
+            # resend the message if necessary 
+            while response != "OK":
+              response = send_message_to_proxy(data, decoded_data['Proxy-IP'], decoded_data['Proxy-Port'])
 
 def handle_proxy_id(arguments, i):
   global id
@@ -324,7 +326,12 @@ def handle_broker_port(arguments, i):
   except:
     print("Invalid broker port")
     return -1
-  return 1 
+  return 1
+
+def handle_option_verbose(arguments, i):
+  global verbose
+  verbose = True
+  return 1
 
 def handle_command_line_args():
   options = {
@@ -333,6 +340,7 @@ def handle_command_line_args():
     "-p": handle_option_proxy_port,
     "-b": handle_broker_ip,
     "-br": handle_broker_port,
+    "-v": handle_option_verbose
   }
 
   arguments = argv[1:]
@@ -371,7 +379,7 @@ if ret_val != -1:
   except KeyboardInterrupt:
     exit(0)
 else:
-    print("Use: python3 proxynode.py -i proxy_ID -b broker_IP -br broker_port -ip proxy_IP -p proxy_port")
+    print("Use: python3 proxynode.py -i proxy_ID -b broker_IP -br broker_port -ip proxy_IP -p proxy_port -v")
 
 #Need to add function to handle leader election for proxy nodes.
 #Bully algorithm based on IDs --> information that it needs for other proxy nodes is in JSON file 
