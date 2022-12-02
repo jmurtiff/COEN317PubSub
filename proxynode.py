@@ -282,7 +282,7 @@ def receiverthread():
             # resend the message if necessary 
             while response != "OK":
               response = send_message_to_proxy(data, decoded_data['Proxy-IP'], decoded_data['Proxy-Port'])
-    conn.sendall(b"OK")   
+      conn.sendall(b"OK")   
 
 def handle_proxy_id(arguments, i):
   global id
