@@ -10,7 +10,7 @@ from Crypto.Signature import pkcs1_15
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA1
 import base64
-import time
+import random
 
 # keys for proxy node
 proxy_publicKey = None
@@ -313,9 +313,13 @@ def receiverthread():
             # this proxy node must be the leader and is NOT the intended recipient, so send the message to other proxy node
             response = send_message_to_proxy(data, decoded_data['Proxy-IP'], decoded_data['Proxy-Port'])
 
-            # resend the message if necessary 
-            while response != "OK":
-              response = send_message_to_proxy(data, decoded_data['Proxy-IP'], decoded_data['Proxy-Port'])
+            # while the subscriber might receive the message, the response might be dropped 
+            messaged_dropped_chance = 0.5
+            if random.random() >= messaged_dropped_chance:
+              # resend the message if necessary 
+              response = "FAILED"
+              while response != "OK":
+                response = send_message_to_proxy(data, decoded_data['Proxy-IP'], decoded_data['Proxy-Port'])
         else:
           pass
         conn.sendall(b"OK")   

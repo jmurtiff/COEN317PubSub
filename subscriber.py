@@ -186,6 +186,7 @@ def receiver():
           if data[-1] == EOT_CHAR[0]:
             data = data[:-1]
             break
+        conn.sendall(b"OK")
         # Send OK response
         # use a chance generator
         # percentage = 0.5
