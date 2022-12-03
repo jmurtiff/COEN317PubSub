@@ -107,18 +107,6 @@ def send_message_to_proxy(message, recipient_proxy_ip, recipient_proxy_port):
 #Added code that can decrypt messages using an associated private or public key (in this case public key).
 def decrypt(ciphertext, key):
   try:
-    #ciphertext = ciphertext.decode(UTF-8)
-    # signature = base64.b64encode(sign(message,privateKey))
-    # signature = signature.decode("UTF-8")
-
-    # proxy_public_key = RSA.import_key(proxy_public_key)
-    # #We need to encrypt using the public key of the proxy node, which we have to read from the JSON file itself.
-    # encrypted_message = base64.b64encode(encrypt(message,proxy_public_key))
-    # encrypted_message = encrypted_message.decode("UTF-8")
-
-    log("Ciphertext type before: " + str(type(ciphertext)))
-    ciphertext = bytes(ciphertext)
-    log("Ciphertext type after: " + str(type(ciphertext)))
     cipher = PKCS1_OAEP.new(key)
     message = cipher.decrypt(ciphertext)
     log("DECRYPTED MESSAGE: " + str(message))
@@ -166,6 +154,16 @@ def verify(message, signature, key):
     return pkcs1_15.new(key).verify(h, signature)
   except:
     return False
+
+# Because we had to do some base64 encoding + UTF-8 decoding in order to send the serialized encrypted messages,
+# it's much easier to do this in a helper function and return the intended bytestreams 
+# so that decryption and encryption can work properly 
+def decode_payload_and_signature(payload, signature):
+  payload = bytes(payload, "ascii")
+  payload = base64.b64decode(payload)
+  signature = bytes(signature, "ascii")
+  signature = base64.b64decode(signature)
+  return payload, signature
 
 # Helper function called by receiverthread() that lets the proxy node store the publisher's public key for verification of signatures
 # Format of publisher.json:
@@ -284,14 +282,19 @@ def receiverthread():
           print(proxy_node_receiving_ip, type(proxy_node_receiving_ip))
           print(proxy_node_receiving_port, type(proxy_node_receiving_port))
           if decoded_data['Proxy-IP'] == proxy_node_receiving_ip and decoded_data['Proxy-Port'] == proxy_node_receiving_port:
-            decrypted_message = decrypt(decoded_data["Payload"], proxy_privateKey)
+            # after reversing the b64 encoding and UTF-8 encoding of the serialized encryption + signature, decrypt 
+            # the payload
+            payload, signature = decode_payload_and_signature()
+            decrypted_message = decrypt(payload, proxy_privateKey)
+            
+            # get the publisher's public key to verify the message 
             publisherPublicKey = get_public_key(decoded_data["Publisher-ID"])
             pub_publicKey = RSA.import_key(publisherPublicKey)
 
             # as long as the publisher's public key can be found, perform rest of verification/authentication before sending to subscribers
             if publisherPublicKey is not None:
               print("VERIFYING MESSAGE")
-              verified = verify(decoded_data["Payload"], decoded_data["Signature"], pub_publicKey)
+              verified = verify(payload, signature, pub_publicKey)
               # once decryption and verification is done
               if verified == "SHA-1" and decrypted_message:
                 log("VERIFIED MESSAGE, SENDING MESSAGE TO SUBSCRIBER")
