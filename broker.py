@@ -215,6 +215,7 @@ def unsubscribe(id, topic):
 #from a given topic.
 def handle_sub_message(data, addr):
   data = data.decode().split()
+  print("DATA RECEIVED FROM SUBSCRIBER: " + str(data))
   sub_id = data[0]
   action = data[1]
   topic = data[2]
