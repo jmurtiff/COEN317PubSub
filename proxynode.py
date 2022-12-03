@@ -138,6 +138,7 @@ def send_message_to_subscriber(message, sub_ip, sub_port):
 
 #This is a helper function intended for cleaner refactoring
 def send_message_to_subscribers(message, subscribers):
+  log("SENDING MESSAGES TO SUBSCRIBERS")
   print(subscribers)
   for sub in subscribers:
           sub_ip = subscribers[sub]['ip']

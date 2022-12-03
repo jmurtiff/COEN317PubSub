@@ -175,6 +175,7 @@ def receiver():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
       # Setup socket and listen for connections
       s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+      log("LISTENING AT PORT " + str(client_port + port_offset))
       s.bind((client_ip, client_port + port_offset))
       s.listen()
 
@@ -189,7 +190,7 @@ def receiver():
             data = data[:-1]
             break
         # Send OK response
-        # conn.sendall(b"OK")
+        conn.sendall(b"OK")
       log(f"Received message: {data.decode()}")
 
 ret_val = handle_command_line_args()
