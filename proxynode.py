@@ -132,7 +132,7 @@ def send_message_to_subscriber(message, sub_ip, sub_port):
   # connect to subscriber and send message
   with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    s.connect((sub_ip, sub_port))
+    s.connect((sub_ip, int(sub_port)))
     s.sendall(message.encode("UTF-8"))
     return s.recv(BUFFER_SIZE)
 

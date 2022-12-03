@@ -47,15 +47,16 @@ def subscribe(topic):
   data = id + " sub " + topic
   print(data)
   print(type(data))
-  data += str(client_port)
+  data += " " + str(client_port + port_offset)
   print(data)
   print(type(data))
-  response = send_message(id + " sub " + topic + " " + str(client_port))
+  #response = send_message(id + " sub " + topic + " " + str(client_port))
+  response = send_message(data)
   if verbose: log(f"Received {response}")
 
 def unsubscribe(topic):
   log(f"Unsubscribing from {topic}")
-  response = send_message(id + " unsub " + topic + " " + str(client_port))
+  response = send_message(id + " unsub " + topic + " " + str(client_port + port_offset))
   if verbose: log(f"Received {response}")
 
 def check_command(command):
