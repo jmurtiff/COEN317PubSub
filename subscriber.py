@@ -51,6 +51,7 @@ def subscribe(topic):
   print(data)
   print(type(data))
   #response = send_message(id + " sub " + topic + " " + str(client_port))
+  
   response = send_message(data)
   if verbose: log(f"Received {response}")
 
