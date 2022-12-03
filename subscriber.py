@@ -187,18 +187,18 @@ def receiver():
             break
         # Send OK response
         # use a chance generator
-        percentage = 0.5
-        if random.random() < percentage:
-          try: 
-            conn.sendall(b"OK")
-            log(f"Received message: {data.decode()}")
-          except:
-            log("Cannot send response back to proxy node")
-        else:
-          try:
-            conn.sendall(b"FAILED")
-          except:
-            log("Cannot sent response back to proxy node")
+        # percentage = 0.5
+        # if random.random() < percentage:
+        #   try: 
+        #     conn.sendall(b"OK")
+        #     log(f"Received message: {data.decode()}")
+        #   except:
+        #     log("Cannot send response back to proxy node")
+        # else:
+        #   try:
+        #     conn.sendall(b"FAILED")
+        #   except:
+        #     log("Cannot sent response back to proxy node")
 
 ret_val = handle_command_line_args()
 if ret_val != -1:
