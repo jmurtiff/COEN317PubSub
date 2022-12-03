@@ -296,8 +296,6 @@ def receiverthread():
               # once decryption and verification is done
               if verified and decrypted_message:
                 log("VERIFIED MESSAGE, SENDING MESSAGE TO SUBSCRIBER")
-                print(decoded_data.keys())
-                print(decoded_data)
                 send_message_to_subscribers(decrypted_message, decoded_data["Subscribers"])
           else:
             log("SENDING MESSAGE TO OTHER PROXY NODE TO BE DECRYPTED")

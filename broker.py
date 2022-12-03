@@ -102,7 +102,6 @@ def handle_pub_message(data):
         log(f"data published to {topic} ({sub_count} subs)")
 
   send_message(data, proxyleader_ip, proxyleader_port)
-  log(f"Data published to proxy leader: {data}")
 
 #Function to set up socket between broker and proxy, and then send
 #message passed as argument. The socket is TCP, not entirely sure if 
@@ -148,9 +147,6 @@ def pubthread():
       s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
       s.bind((host, pub_port))
       s.listen()
-
-      log("Broker listening on port " + str(pub_port))
-
       # Accept connections
       conn, addr = s.accept()
       data = b""
@@ -190,12 +186,10 @@ def handle_pub_ID_publickey(data):
   with open("proxy.json", "r") as infile:
     for line in infile:
       dict = json.loads(line)
-      print("DICT: " + str(dict))
       if dict['is-leader'] == True:
         proxyleader_ip = dict['IP']
         proxyleader_port = dict['port']
         send_message(data, proxyleader_ip, proxyleader_port)
-  log(f"Data published to proxy leader: {data}")
 
 
 #Add to the subscriptions array with each subscriber based on their id, topic, ip, and port
