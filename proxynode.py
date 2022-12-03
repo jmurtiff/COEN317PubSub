@@ -151,9 +151,12 @@ def send_message_to_subscribers(message, subscribers):
           print(sub_port)
           response = send_message_to_subscriber(message, sub_ip, sub_port).decode()
 
-          # resend the message if necessary 
-          while response != "OK":
-            response = send_message_to_subscriber(message, sub_ip, sub_port).decode()
+          failure = 1.0
+          if random.random() <= 1.0:
+            response = "FAILED"
+            # resend the message if necessary 
+            while response != "OK":
+              response = send_message_to_subscriber(message, sub_ip, sub_port).decode()
 
 # Added code that can verify message signatures according with SHA-1 signature
 def verify(message, signature, key):
