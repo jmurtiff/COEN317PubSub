@@ -2,6 +2,7 @@ import socket
 from time import sleep
 from sys import argv, exit
 import threading
+import random
 
 id = None
 client_ip = "127.0.0.1"
@@ -184,9 +185,13 @@ def receiver():
           if data[-1] == EOT_CHAR[0]:
             data = data[:-1]
             break
-        # Send OK response
+      # simulate message failure 
+      percentage_chance = 0.5
+      if random.random() < percentage_chance:
         conn.sendall(b"OK")
-      log(f"Received message: {data.decode()}")
+        log(f"Received message: {data.decode()}")
+      else:
+        conn.sendall(b"FAILED")
 
 ret_val = handle_command_line_args()
 if ret_val != -1:
