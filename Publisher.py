@@ -50,6 +50,7 @@ def log(message):
 def encrypt(message, key):
   cipher_rsa = PKCS1_OAEP.new(key)
   ciphertext = cipher_rsa.encrypt(message.encode())
+  print(ciphertext)
   return ciphertext
 
 #ADDED CODE
@@ -59,6 +60,7 @@ def sign(message, key):
   newMessage = message.encode('UTF-8')
   h = SHA1.new(newMessage)
   signature = pkcs1_15.new(key).sign(h)
+  print(signature)
   return signature
 
 #QUESTION: Why do we need to include clientIP and clientPort for message?
@@ -173,10 +175,10 @@ def send_message(message,topic):
     encrypted_message = base64.b64encode(encrypt(message,proxy_public_key))
     encrypted_message = encrypted_message.decode("UTF-8")
 
-    log("Encrypted message " + encrypted_message)
-    log("Encrypted message type " + str(type(encrypted_message)))
-    log("Signature: " + signature)
-    log("Signature type :" + str(type(signature)))
+    # log("Encrypted message " + encrypted_message)
+    # log("Encrypted message type " + str(type(encrypted_message)))
+    # log("Signature: " + signature)
+    # log("Signature type :" + str(type(signature)))
 
     #Create a partially encrypted message that contains relevant information as well as the message the 
     #publisher creates.

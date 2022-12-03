@@ -159,10 +159,8 @@ def verify(message, signature, key):
 # it's much easier to do this in a helper function and return the intended bytestreams 
 # so that decryption and encryption can work properly 
 def decode_payload_and_signature(payload, signature):
-  payload = payload.decode("UTF-8")
   payload = bytes(payload, "ascii")
   payload = base64.b64decode(payload)
-  signature = signature.decode("UTF-8")
   signature = bytes(signature, "ascii")
   signature = base64.b64decode(signature)
   print(payload)
