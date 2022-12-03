@@ -284,7 +284,7 @@ def receiverthread():
           if decoded_data['Proxy-IP'] == proxy_node_receiving_ip and decoded_data['Proxy-Port'] == proxy_node_receiving_port:
             # after reversing the b64 encoding and UTF-8 encoding of the serialized encryption + signature, decrypt 
             # the payload
-            payload, signature = decode_payload_and_signature()
+            payload, signature = decode_payload_and_signature(decoded_data["Payload"], decoded_data["Signature"])
             decrypted_message = decrypt(payload, proxy_privateKey)
             
             # get the publisher's public key to verify the message 
