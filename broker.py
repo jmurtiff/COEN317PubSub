@@ -243,6 +243,7 @@ def subthread():
       # Accept connections
       conn, addr = s.accept()
       data = b""
+      log("HANDLING SUBSCRIBER")
       with conn:
         if verbose: log(f"Subscriber connected from {addr[0]}:{addr[1]}")
         # Loop through connections until we get the EOT_CHAR (end-of-transmission)
