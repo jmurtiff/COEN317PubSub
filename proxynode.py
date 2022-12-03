@@ -138,7 +138,7 @@ def send_message_to_subscriber(message, sub_ip, sub_port):
 
 #This is a helper function intended for cleaner refactoring
 def send_message_to_subscribers(message, subscribers):
-  log("SENDING MESSAGES TO SUBSCRIBERS")
+  #log("SENDING MESSAGES TO SUBSCRIBERS")
   print(subscribers)
   for sub in subscribers:
           sub_ip = subscribers[sub]['ip']
@@ -157,10 +157,9 @@ def verify(message, signature, key):
   h = SHA1.new(message)
   try:
     pkcs1_15.new(key).verify(h, signature)
-    log("SUCCESSFULLY VERIFIED")
+    #log("SUCCESSFULLY VERIFIED")
     return True
   except:
-    log("FAILED VERIFIED")
     return False
 
 # Because we had to do some base64 encoding + UTF-8 decoding in order to send the serialized encrypted messages,
@@ -295,12 +294,14 @@ def receiverthread():
               verified = verify(decrypted_message, signature, pub_publicKey)
               # once decryption and verification is done
               if verified and decrypted_message:
-                log("VERIFIED MESSAGE, SENDING MESSAGE TO SUBSCRIBER")
+                #log("VERIFIED MESSAGE, SENDING MESSAGE TO SUBSCRIBER")
                 print(decoded_data.keys())
                 print(decoded_data)
                 send_message_to_subscribers(decrypted_message, decoded_data["Subscribers"])
+              else:
+                log("FAILED VERIFIED, DROPPING THE MESSAGE")
           else:
-            log("SENDING MESSAGE TO OTHER PROXY NODE TO BE DECRYPTED")
+            #log("SENDING MESSAGE TO OTHER PROXY NODE TO BE DECRYPTED")
             # this proxy node must be the leader and is NOT the intended recipient, so send the message to other proxy node
             response = send_message_to_proxy(data, decoded_data['Proxy-IP'], decoded_data['Proxy-Port'])
 
