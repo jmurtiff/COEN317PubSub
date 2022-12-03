@@ -51,7 +51,7 @@ def subscribe(topic):
   print(data)
   print(type(data))
   #response = send_message(id + " sub " + topic + " " + str(client_port))
-  
+
   response = send_message(data)
   if verbose: log(f"Received {response}")
 
@@ -175,8 +175,9 @@ def receiver():
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
       # Setup socket and listen for connections
       s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+      log("LISTENING AT IP " + str(client_ip))
       log("LISTENING AT PORT " + str(client_port + port_offset))
-      s.bind((client_ip, client_port + port_offset))
+      s.bind(("0.0.0.0", client_port + port_offset))
       s.listen()
 
       # Accept connections

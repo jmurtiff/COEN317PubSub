@@ -133,7 +133,7 @@ def send_message_to_subscriber(message, sub_ip, sub_port):
   with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.connect((sub_ip, int(sub_port)))
-    s.sendall(message.encode("UTF-8"))
+    s.sendall(message + EOT_CHAR)
     return s.recv(BUFFER_SIZE)
 
 #This is a helper function intended for cleaner refactoring
@@ -145,7 +145,7 @@ def send_message_to_subscribers(message, subscribers):
           sub_port = subscribers[sub]['port']
           print(sub_ip)
           print(sub_port)
-          response = send_message_to_subscriber(message, sub_ip, sub_port)
+          response = send_message_to_subscriber(message, sub_ip, sub_port).decode()
 
           # resend the message if necessary 
           while response != "OK":
