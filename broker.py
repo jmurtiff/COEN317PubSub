@@ -4,6 +4,7 @@ from time import sleep
 from sys import exit, argv
 import json
 from os.path import exists
+import time
 
 #IP address of broker.
 host = "192.168.137.11"
@@ -294,6 +295,7 @@ def proxythread():
             json.dump(json.loads(data.decode("UTF-8")), file)
       except socket.timeout:
         # Begin leader election if no new proxy node connections have been established in the timeout period
+        start_time = time.time()
         proxyleader_ID = -1
         proxyleader_ip = None
         proxyleader_port = None
@@ -326,6 +328,8 @@ def proxythread():
             "proxy-list": infile.read()
           }
           send_message(dictionary, proxyleader_ip, proxyleader_port)
+        end_time = time.time()
+        print("Time to identify to-be proxy leader and start leader election: ", round(start_time-end_time, 4), sep="")
         break
 #This function is used if we run python broker.py -s sub_port -p pub_port [-o port_offset -v]
 #and we enter in a different subscriber port value for the broker via the command line.

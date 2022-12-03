@@ -10,6 +10,7 @@ from Crypto.Signature import pkcs1_15
 from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA1
 import base64
+import time
 
 # keys for proxy node
 proxy_publicKey = None
@@ -268,8 +269,11 @@ def receiverthread():
 
         # check if leader election has occurred, the new leader sends elected messages to other proxy nodes, and store information about all proxy nodes 
         if "election-message" in decoded_data and decoded_data["election-message"]:
+          start = time.time()
           store_child_proxy_nodes(decoded_data['proxy-list'])
           send_elected_messages(decoded_data['proxy-list'])
+          end = time.time()
+          print("Time for proxy nodes to carry out leader election: ", round(start-end, 4), sep="")
         
         # if the current proxy node is NOT the leader but gets the Elected message, store the proxy-list embedded in the message
         elif "Elected" in decoded_data and decoded_data["Elected"]: 
@@ -282,6 +286,7 @@ def receiverthread():
         # if data is a published event message, check the receiving_IP + receiving_PORT in the messages
         elif 'Proxy-IP' in decoded_data and 'Proxy-Port' in decoded_data:
           if decoded_data['Proxy-IP'] == proxy_node_receiving_ip and decoded_data['Proxy-Port'] == proxy_node_receiving_port:
+            start_time = time.time()
             # after reversing the b64 encoding and UTF-8 encoding of the serialized encryption + signature, decrypt 
             # the payload
             payload, signature = decode_payload_and_signature(decoded_data["Payload"], decoded_data["Signature"])
@@ -297,7 +302,10 @@ def receiverthread():
               verified = verify(payload,signature, pub_publicKey)
               # once decryption and verification is done
               if verified and decrypted_message:
+                end_time = time.time()
+                print("Decryption and verification time: ", round(start_time-end_time, 4), sep="")
                 send_message_to_subscribers(decrypted_message, decoded_data["Subscribers"])
+
               else:
                 log("FAILED VERIFIED, DROPPING THE MESSAGE")
           else:

@@ -9,6 +9,7 @@ from Crypto.Cipher import PKCS1_OAEP
 from Crypto.Hash import SHA1
 from Crypto.Signature import pkcs1_15
 import base64
+import time
 
 #This is good, doesn't have to change.
 #Publisher id for differentiating publishers between one another. We can change these values
@@ -48,17 +49,23 @@ def log(message):
 #This function takes in a message and either the public or private key and encrypts the message
 #using the private or public key.
 def encrypt(message, key):
+  start_time = time.time()
   cipher_rsa = PKCS1_OAEP.new(key)
   ciphertext = cipher_rsa.encrypt(message.encode())
+  end_time = time.time()
+  print("Encryption time: ", round(start_time-end_time, 4), sep="")
   return ciphertext
 
 #ADDED CODE
 #This is good, doesn't have to change.
 #This function takes in a message and a key and signs the message using SHA-1.
 def sign(message, key):
+  start_time = time.time()
   newMessage = message.encode('UTF-8')
   h = SHA1.new(newMessage)
   signature = pkcs1_15.new(key).sign(h)
+  end_time = time.time()
+  print("Signing time: ", round(start_time-end_time, 4), sep="")
   return signature
 
 #QUESTION: Why do we need to include clientIP and clientPort for message?

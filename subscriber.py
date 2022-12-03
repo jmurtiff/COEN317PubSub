@@ -3,6 +3,7 @@ from time import sleep
 from sys import argv, exit
 import threading
 import random
+import time
 
 id = None
 client_ip = "127.0.0.1"
