@@ -299,8 +299,8 @@ def receiverthread():
 
             # as long as the publisher's public key can be found, perform rest of verification/authentication before sending to subscribers
             if publisherPublicKey is not None:
-              # verified = verify(decrypted_message, signature, pub_publicKey)
-              verified = verify(payload,signature, pub_publicKey)
+              verified = verify(decrypted_message, signature, pub_publicKey)
+              # verified = verify(payload,signature, pub_publicKey)
               # once decryption and verification is done
               if verified and decrypted_message:
                 end_time = time.time()
