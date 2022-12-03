@@ -185,9 +185,11 @@ def receiver():
           if data[-1] == EOT_CHAR[0]:
             data = data[:-1]
             break
-        # simulate message failure 
-        percentage_chance = 0.5
-        if random.random() < percentage_chance:
+      # Send OK response
+      # use a chance generator
+      if conn:
+        percentage = 0.5
+        if random.random() < percentage:
           conn.sendall(b"OK")
           log(f"Received message: {data.decode()}")
         else:
