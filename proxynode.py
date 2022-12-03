@@ -7,7 +7,8 @@ import threading
 import os
 from Crypto.PublicKey import RSA
 from Crypto.Signature import pkcs1_15
-from Crypto.Hash import SHA1
+from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Hash import SHA256
 import base64
 
 # keys for proxy node
@@ -149,10 +150,14 @@ def send_message_to_subscribers(message, subscribers):
 # Added code that can verify message signatures according with SHA-1 signature
 def verify(message, signature, key):
   # message = message.decode('UTF-8')
-  h = SHA1.new(message)
+  h = SHA256.new(message)
   try:
-    return pkcs1_15.new(key).verify(h, signature)
+    test = pkcs1_15.new(key).verify(h, signature)
+    log("SUCCESSFULLY VERIFIED")
+    print(test)
+    return True
   except:
+    log("FAILED VERIFIED")
     return False
 
 # Because we had to do some base64 encoding + UTF-8 decoding in order to send the serialized encrypted messages,
@@ -298,7 +303,7 @@ def receiverthread():
             # as long as the publisher's public key can be found, perform rest of verification/authentication before sending to subscribers
             if publisherPublicKey is not None:
               print("VERIFYING MESSAGE")
-              verified = verify(payload, signature, pub_publicKey)
+              verified = verify(decrypted_message, signature, pub_publicKey)
               # once decryption and verification is done
               if verified == "SHA-1" and decrypted_message:
                 log("VERIFIED MESSAGE, SENDING MESSAGE TO SUBSCRIBER")

@@ -6,7 +6,7 @@ import json
 import random
 from Crypto.PublicKey import RSA
 from Crypto.Cipher import AES, PKCS1_OAEP
-from Crypto.Hash import SHA1
+from Crypto.Hash import SHA256
 from Crypto.Signature import pkcs1_15
 import base64
 
@@ -58,7 +58,7 @@ def encrypt(message, key):
 #This function takes in a message and a key and signs the message using SHA-1.
 def sign(message, key):
   newMessage = message.encode('UTF-8')
-  h = SHA1.new(newMessage)
+  h = SHA256.new(newMessage)
   signature = pkcs1_15.new(key).sign(h)
   print(signature)
   return signature
