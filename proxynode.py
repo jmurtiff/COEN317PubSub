@@ -134,7 +134,9 @@ def send_message_to_subscriber(message, sub_ip, sub_port):
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     s.connect((sub_ip, int(sub_port)))
     s.sendall(message + EOT_CHAR)
-    return s.recv(BUFFER_SIZE)
+    response = s.recv(BUFFER_SIZE)
+    s.close()
+    return response
 
 #This is a helper function intended for cleaner refactoring
 def send_message_to_subscribers(message, subscribers):
@@ -149,7 +151,7 @@ def send_message_to_subscribers(message, subscribers):
 
           # resend the message if necessary 
           while response != "OK":
-            response = send_message_to_subscriber(message, sub_ip, sub_port)
+            response = send_message_to_subscriber(message, sub_ip, sub_port).decode()
 
 # Added code that can verify message signatures according with SHA-1 signature
 def verify(message, signature, key):
@@ -291,7 +293,8 @@ def receiverthread():
 
             # as long as the publisher's public key can be found, perform rest of verification/authentication before sending to subscribers
             if publisherPublicKey is not None:
-              verified = verify(decrypted_message, signature, pub_publicKey)
+              # verified = verify(decrypted_message, signature, pub_publicKey)
+              verified = verify(payload,signature, pub_publicKey)
               # once decryption and verification is done
               if verified and decrypted_message:
                 send_message_to_subscribers(decrypted_message, decoded_data["Subscribers"])
