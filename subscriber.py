@@ -185,13 +185,13 @@ def receiver():
           if data[-1] == EOT_CHAR[0]:
             data = data[:-1]
             break
-      # simulate message failure 
-      percentage_chance = 0.5
-      if random.random() < percentage_chance:
-        conn.sendall(b"OK")
-        log(f"Received message: {data.decode()}")
-      else:
-        conn.sendall(b"FAILED")
+        # simulate message failure 
+        percentage_chance = 0.5
+        if random.random() < percentage_chance:
+          conn.sendall(b"OK")
+          log(f"Received message: {data.decode()}")
+        else:
+          conn.sendall(b"FAILED")
 
 ret_val = handle_command_line_args()
 if ret_val != -1:
