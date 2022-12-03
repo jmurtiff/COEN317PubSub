@@ -106,7 +106,10 @@ def handle_pub_message(data):
       # only if there are subscribers subscribed to that particular topic, then send
       if sub_count > 0:
         send_message(data, proxyleader_ip, proxyleader_port)
-
+      else:
+        log("No subscribers subscribed to " + topic)
+    else:
+      log("No subscribers to publish to")
 #Function to set up socket between broker and proxy, and then send
 #message passed as argument. The socket is TCP, not entirely sure if 
 #we want to use TCP or not for this communication. 
