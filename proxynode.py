@@ -8,7 +8,7 @@ import os
 from Crypto.PublicKey import RSA
 from Crypto.Signature import pkcs1_15
 from Crypto.Cipher import PKCS1_OAEP
-from Crypto.Hash import SHA256
+from Crypto.Hash import SHA1
 import base64
 
 # keys for proxy node
@@ -150,11 +150,10 @@ def send_message_to_subscribers(message, subscribers):
 # Added code that can verify message signatures according with SHA-1 signature
 def verify(message, signature, key):
   # message = message.decode('UTF-8')
-  h = SHA256.new(message)
+  h = SHA1.new(message)
   try:
-    test = pkcs1_15.new(key).verify(h, signature)
+    pkcs1_15.new(key).verify(h, signature)
     log("SUCCESSFULLY VERIFIED")
-    print(test)
     return True
   except:
     log("FAILED VERIFIED")
@@ -168,10 +167,6 @@ def decode_payload_and_signature(payload, signature):
   payload = base64.b64decode(payload)
   signature = bytes(signature, "ascii")
   signature = base64.b64decode(signature)
-  print(payload)
-  print(str(type(payload)))
-  print(signature)
-  print(str(type(signature)))
   return payload, signature
 
 # Helper function called by receiverthread() that lets the proxy node store the publisher's public key for verification of signatures
@@ -265,7 +260,6 @@ def receiverthread():
             break
             
         decoded_data = json.loads(data.decode("UTF-8"))
-        print(decoded_data)
 
         # check if leader election has occurred, the new leader sends elected messages to other proxy nodes, and store information about all proxy nodes 
         if "election-message" in decoded_data and decoded_data["election-message"]:
@@ -282,14 +276,6 @@ def receiverthread():
 
         # if data is a published event message, check the receiving_IP + receiving_PORT in the messages
         elif 'Proxy-IP' in decoded_data and 'Proxy-Port' in decoded_data:
-          # print("ENTERED THIS STATEMENT")
-          # print(decoded_data['Proxy-IP'])
-          # print(type(decoded_data['Proxy-IP']))
-          # print(decoded_data['Proxy-Port'])
-          # print(type(decoded_data['Proxy-Port']))
-
-          print(proxy_node_receiving_ip, type(proxy_node_receiving_ip))
-          print(proxy_node_receiving_port, type(proxy_node_receiving_port))
           if decoded_data['Proxy-IP'] == proxy_node_receiving_ip and decoded_data['Proxy-Port'] == proxy_node_receiving_port:
             # after reversing the b64 encoding and UTF-8 encoding of the serialized encryption + signature, decrypt 
             # the payload
@@ -302,10 +288,9 @@ def receiverthread():
 
             # as long as the publisher's public key can be found, perform rest of verification/authentication before sending to subscribers
             if publisherPublicKey is not None:
-              print("VERIFYING MESSAGE")
               verified = verify(decrypted_message, signature, pub_publicKey)
               # once decryption and verification is done
-              if verified == "SHA-1" and decrypted_message:
+              if verified and decrypted_message:
                 log("VERIFIED MESSAGE, SENDING MESSAGE TO SUBSCRIBER")
                 send_message_to_subscribers(decrypted_message, decoded_data["Subscribers"])
           else:

@@ -5,8 +5,8 @@ import logging
 import json
 import random
 from Crypto.PublicKey import RSA
-from Crypto.Cipher import AES, PKCS1_OAEP
-from Crypto.Hash import SHA256
+from Crypto.Cipher import PKCS1_OAEP
+from Crypto.Hash import SHA1
 from Crypto.Signature import pkcs1_15
 import base64
 
@@ -50,7 +50,6 @@ def log(message):
 def encrypt(message, key):
   cipher_rsa = PKCS1_OAEP.new(key)
   ciphertext = cipher_rsa.encrypt(message.encode())
-  print(ciphertext)
   return ciphertext
 
 #ADDED CODE
@@ -58,9 +57,8 @@ def encrypt(message, key):
 #This function takes in a message and a key and signs the message using SHA-1.
 def sign(message, key):
   newMessage = message.encode('UTF-8')
-  h = SHA256.new(newMessage)
+  h = SHA1.new(newMessage)
   signature = pkcs1_15.new(key).sign(h)
-  print(signature)
   return signature
 
 #QUESTION: Why do we need to include clientIP and clientPort for message?
@@ -120,7 +118,6 @@ def generate_JSON_ID_PublicKey():
 
   data = json.dumps(dictionary)
 
-  log("ABOUT TO SEND PUBLISHER'S PUBLIC KEY")
   with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
     # Setup socket and connect
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -174,11 +171,6 @@ def send_message(message,topic):
     #We need to encrypt using the public key of the proxy node, which we have to read from the JSON file itself.
     encrypted_message = base64.b64encode(encrypt(message,proxy_public_key))
     encrypted_message = encrypted_message.decode("UTF-8")
-
-    # log("Encrypted message " + encrypted_message)
-    # log("Encrypted message type " + str(type(encrypted_message)))
-    # log("Signature: " + signature)
-    # log("Signature type :" + str(type(signature)))
 
     #Create a partially encrypted message that contains relevant information as well as the message the 
     #publisher creates.
@@ -341,7 +333,8 @@ ret_val = handle_command_line_args()
 if ret_val != -1:
   log("Publisher process started")
   get_proxy_nodes()
-  log("Response received after sending public key " + generate_JSON_ID_PublicKey())
+  generate_JSON_ID_PublicKey()
+  log("SENT PUBLISHER'S PUBLIC KEY")
   #handle_command_file()
   handle_cli_commands()
 else:
