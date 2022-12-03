@@ -87,21 +87,25 @@ def handle_pub_message(data):
     #     send(decrypted message)
     print(subscriptions)
     sub_count = 0
-    for sub in subscriptions:
-      if sub['topic'] == topic:
-        sub_count += 1
-        if verbose: log(f"Sending message to {sub['id']} @ {sub['ip']}:{sub['port']}")
-        subscribers_to_send_to[sub['id']] = {
-          "ip": sub['ip'],
-          "port": sub["port"]
-        }
+    # as long as there are subscribers subscribed to the broker, check for any subscribers subscribed to topic
+    if len(subscriptions) > 0:
+      for sub in subscriptions:
+        if sub['topic'] == topic:
+          sub_count += 1
+          if verbose: log(f"Sending message to {sub['id']} @ {sub['ip']}:{sub['port']}")
+          subscribers_to_send_to[sub['id']] = {
+            "ip": sub['ip'],
+            "port": sub["port"]
+          }
 
-        # embed subscribers' information into message for proxy nodes to handle later
-        data["Subscribers"] = subscribers_to_send_to
-        log("Publisher ID: " + data["Publisher-ID"])
-        log(f"data published to {topic} ({sub_count} subs)")
+          # embed subscribers' information into message for proxy nodes to handle later
+          data["Subscribers"] = subscribers_to_send_to
+          log("Publisher ID: " + data["Publisher-ID"])
+          log(f"data published to {topic} ({sub_count} subs)")
 
-  send_message(data, proxyleader_ip, proxyleader_port)
+      # only if there are subscribers subscribed to that particular topic, then send
+      if sub_count > 0:
+        send_message(data, proxyleader_ip, proxyleader_port)
 
 #Function to set up socket between broker and proxy, and then send
 #message passed as argument. The socket is TCP, not entirely sure if 
