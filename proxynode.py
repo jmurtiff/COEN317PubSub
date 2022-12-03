@@ -154,6 +154,7 @@ def send_message_to_subscribers(message, subscribers):
           failure = 1.0
           if random.random() <= 1.0:
             response = "FAILED"
+            log("FAILED TO RECEIVE ACK FROM SUBSCRIBER")
             # resend the message if necessary 
             while response != "OK":
               response = send_message_to_subscriber(message, sub_ip, sub_port).decode()
