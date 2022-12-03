@@ -180,25 +180,6 @@ def pubthread():
           log("HANDLING PUBLISH MESSAGE")
           handle_pub_message(convertData)
           # this is a normal message 
-        # try:
-        #   convertData['getProxyNodes']
-        # except:
-        #   try: 
-        #     convertData['public-key']
-
-        #   except:
-        #     handle_pub_message(data)
-          
-        #   else:
-        #     #if not normal message 
-        #     handle_pub_ID_publickey(data)
-        # else:
-        #   # Send proxy file to publisher if requested
-        #   print("SENDING HERE")
-        #   with open("proxy.json", "r") as infile:
-        #     data = infile.read()
-        #     conn.sendall(data.encode("UTF-8"))
-        #     infile.close()
 
 #Function that handles sending publisher messages that contain publisher ID's
 #and publisher public keys. 
@@ -237,10 +218,11 @@ def handle_sub_message(data, addr):
   sub_id = data[0]
   action = data[1]
   topic = data[2]
+  sub_port = data[3]
   logging_output = "subscribed to" if action == "sub" else "unsubscribed from"
   log(f"{sub_id} {logging_output} {topic}")
   if action == "sub":
-    subscribe(sub_id, topic, addr[0], addr[1])
+    subscribe(sub_id, topic, addr[0], sub_port)
   else:
     unsubscribe(sub_id, topic)
   if verbose: log("Current subs: " + str(subscriptions))

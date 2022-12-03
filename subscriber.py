@@ -40,14 +40,16 @@ def send_message(message):
     # Wait for OK response
     return s.recv(BUFFER_SIZE).decode()
 
+
+# NOTE: in both subscribe + unsubscribe, we need to ALSO SEND CLIENT_PORT
 def subscribe(topic):
   log(f"Subscribing to {topic}")
-  response = send_message(id + " sub " + topic)
+  response = send_message(id + " sub " + topic + " " + client_port)
   if verbose: log(f"Received {response}")
 
 def unsubscribe(topic):
   log(f"Unsubscribing from {topic}")
-  response = send_message(id + " unsub " + topic)
+  response = send_message(id + " unsub " + topic + " " + client_port)
   if verbose: log(f"Received {response}")
 
 def check_command(command):
@@ -191,4 +193,4 @@ if ret_val != -1:
   except KeyboardInterrupt:
     exit(0)
 else:
-  print("Use: python subscriber.py -i ID -r sub_port -h broker_IP -p port [-f command_file -o port_offset -v]")
+  print("Use: python subscriber.py -i ID -r sub_port -h broker_IP -p broker_port [-f command_file -o port_offset -v]")
