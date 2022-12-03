@@ -163,6 +163,10 @@ def decode_payload_and_signature(payload, signature):
   payload = base64.b64decode(payload)
   signature = bytes(signature, "ascii")
   signature = base64.b64decode(signature)
+  log("Encrypted message " + payload)
+  log("Encrypted message type " + str(type(payload)))
+  log("Signature: " + signature)
+  log("Signature type :" + str(type(signature)))
   return payload, signature
 
 # Helper function called by receiverthread() that lets the proxy node store the publisher's public key for verification of signatures

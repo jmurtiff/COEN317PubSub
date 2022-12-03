@@ -173,6 +173,11 @@ def send_message(message,topic):
     encrypted_message = base64.b64encode(encrypt(message,proxy_public_key))
     encrypted_message = encrypted_message.decode("UTF-8")
 
+    log("Encrypted message " + encrypted_message)
+    log("Encrypted message type " + str(type(encrypted_message)))
+    log("Signature: " + signature)
+    log("Signature type :" + str(type(signature)))
+
     #Create a partially encrypted message that contains relevant information as well as the message the 
     #publisher creates.
     final_message = {
